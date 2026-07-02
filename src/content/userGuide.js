@@ -50,9 +50,9 @@ export const USER_GUIDE_CATEGORIES = [
       'Choose a date, then tap an available start hour on the time grid.',
           'Green highlights your selected block; striped slots are already taken.',
           'Pick duration (1–24 hours, limited by time left that day).',
-          'Add optional extras — paddle or ball rental, or a trainer — on the next step.',
+          'Add optional extras — paddle or ball rental (₱50/hr each) — on the next step.',
           'Review the price breakdown and continue to payment.',
-          'Scan the GCash or GoTyme QR, pay, then enter sender name, platform, and reference.',
+          'Scan the QR PH code, pay the exact amount, then enter sender name, reference, and app used if needed.',
           'Submit — your booking stays Processing until staff verifies payment.',
         ],
         tips: [

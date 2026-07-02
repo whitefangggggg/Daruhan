@@ -3,6 +3,8 @@ import {
   getOccupiedHours,
   getBookingEndHour,
   getMaxDurationForStart,
+  getMaxBookableDuration,
+  getMaxDurationForDate,
   isValidBookingRange,
   canStartOnAnyCourt,
   canStartOnAllCourts,
@@ -121,8 +123,25 @@ describe('isValidBookingRange / getMaxDurationForStart', () => {
 })
 
 describe('getVenueClosedHours', () => {
-  it('closes 5AM–8AM for 8AM–5AM operating hours', () => {
-    expect([...getVenueClosedHours()].sort((a, b) => a - b)).toEqual([5, 6, 7])
+  it('closes 5AM–7AM for 7AM–5AM operating hours', () => {
+    expect([...getVenueClosedHours()].sort((a, b) => a - b)).toEqual([5, 6])
+  })
+})
+
+describe('getMaxBookableDuration', () => {
+  it('stops before the 5AM–7AM closed window', () => {
+    expect(getMaxBookableDuration(4, new Set())).toBe(1)
+    expect(getMaxBookableDuration(3, new Set())).toBe(2)
+    expect(getMaxBookableDuration(0, new Set())).toBe(5)
+  })
+
+  it('caps at midnight on the same calendar day', () => {
+    expect(getMaxBookableDuration(23, new Set())).toBe(1)
+    expect(getMaxBookableDuration(20, new Set())).toBe(4)
+  })
+
+  it('returns the longest duration with any valid start today', () => {
+    expect(getMaxDurationForDate(new Set())).toBe(17)
   })
 })
 

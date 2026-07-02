@@ -22,6 +22,7 @@ import ManageOpenPlay from './pages/admin/ManageOpenPlay'
 import AdminGuide from './pages/admin/AdminGuide'
 import Guide from './pages/Guide'
 import BookKtv from './pages/BookKtv'
+import AuthCallback from './pages/AuthCallback'
 
 function Spinner() {
   return (
@@ -63,7 +64,7 @@ import { useEffect } from 'react'
 function AppShell() {
   const location = useLocation()
   const { theme } = useTheme()
-  const hideChrome = location.pathname === '/onboarding'
+  const hideChrome = location.pathname === '/onboarding' || location.pathname === '/auth/callback'
   const isAdminArea = location.pathname.startsWith('/admin')
   const isPublicPage = location.pathname === '/' || location.pathname === '/login'
   
@@ -134,6 +135,7 @@ const router = createBrowserRouter([
       { path: '/open-play', element: <ProtectedRoute userOnly><OpenPlay /></ProtectedRoute> },
       { path: '/notifications', element: <ProtectedRoute userOnly><Notifications /></ProtectedRoute> },
       { path: '/login', element: <GuestRoute><Login /></GuestRoute> },
+      { path: '/auth/callback', element: <AuthCallback /> },
       { path: '/onboarding', element: <ProtectedRoute skipOnboarding userOnly><Onboarding /></ProtectedRoute> },
       { path: '/profile', element: <ProtectedRoute userOnly><Profile /></ProtectedRoute> },
       { path: '/book', element: <ProtectedRoute userOnly><Book /></ProtectedRoute> },

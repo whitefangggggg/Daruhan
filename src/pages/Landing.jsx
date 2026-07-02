@@ -369,8 +369,6 @@ export default function Landing() {
             <motion.div
               className="relative rounded-3xl overflow-hidden p-7 md:p-10 min-h-[180px] flex flex-col justify-between"
               style={{ background: THEME.gradients.navy }}
-              whileHover={{ y: -2 }}
-              transition={transition.hover}
             >
               <span
                 className="absolute right-6 top-2 font-extrabold leading-none select-none pointer-events-none"
@@ -391,18 +389,33 @@ export default function Landing() {
               </span>
             </motion.div>
           </MotionIn>
+        </div>
+      </section>
 
+      {/* ── EXPERIENCE (navy lens band — PaddleHub-style) ─────────────────────── */}
+      <div className="about-experience-shell bg-brand-cream">
+        <svg width="0" height="0" className="absolute" aria-hidden>
+          <defs>
+            <clipPath id="experience-lens-clip" clipPathUnits="objectBoundingBox">
+              <path d="M 0,0.07 C 0.24,0 0.76,0 1,0.07 L 1,0.93 C 0.76,1 0.24,1 0,0.93 Z" />
+            </clipPath>
+          </defs>
+        </svg>
+
+        <section className="about-experience scroll-mt-20" aria-labelledby="experience-heading">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 pt-14 sm:pt-20 pb-16 sm:pb-20">
           <MotionIn delay={80} amount={0} once={false}>
-            <div className="text-center mt-12 mb-8">
+            <div className="text-center mb-8 sm:mb-10">
               <div className="flex items-center gap-4 mb-5">
-                <span className="flex-1 h-px bg-brand-gold-300/40" />
-                <span className="text-[11px] font-black uppercase tracking-[0.25em] text-brand-gold-500/60">the full experience</span>
-                <span className="flex-1 h-px bg-brand-gold-300/40" />
+                <span className="flex-1 h-px bg-brand-gold-400/25" />
+                <span className="text-[11px] font-black uppercase tracking-[0.25em] text-brand-gold-300/80">the full experience</span>
+                <span className="flex-1 h-px bg-brand-gold-400/25" />
               </div>
               <h3
+                id="experience-heading"
                 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] pb-2 mb-4"
                 style={{
-                  background: 'linear-gradient(135deg, #c9a227 0%, #e8d5a3 40%, #b8922a 100%)',
+                  background: 'linear-gradient(135deg, #f0d060 0%, #e8d5a3 40%, #c9a227 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -410,7 +423,7 @@ export default function Landing() {
               >
                 While you&apos;re here
               </h3>
-              <p className="text-gray-500 text-sm md:text-base max-w-md mx-auto leading-relaxed">
+              <p className="text-brand-gold-100/75 text-sm md:text-base max-w-md mx-auto leading-relaxed">
                 Daruhan is more than a court — it&apos;s a full food park and gig hub. Stay a little longer.
               </p>
             </div>
@@ -426,63 +439,61 @@ export default function Landing() {
           >
             {SITE.aboutVenues.slice(1, 6).map((venue, i) => (
               <MotionItem key={venue.title} variants={fadeUp}>
-                <motion.div
-                  className="relative rounded-2xl bg-white border border-brand-gold-200/60 p-5 h-full flex flex-col gap-4 overflow-hidden"
-                  style={{ boxShadow: '0 4px 24px rgba(201,162,39,0.07)' }}
-                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(201,162,39,0.18)', borderColor: 'rgba(212,188,106,0.8)' }}
-                  transition={transition.hover}
+                <div
+                  className="amenity-card h-full"
+                  style={{ '--card-glow-delay': `${i * 0.5}s`, '--shine-delay': `${i * 0.8}s` }}
                 >
-                  <span
-                    className="absolute right-3 top-1 font-extrabold leading-none select-none pointer-events-none"
-                    style={{ fontSize: '5rem', color: 'rgba(201,162,39,0.07)' }}
-                    aria-hidden
-                  >{String(i + 2).padStart(2, '0')}</span>
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(145deg, #f3ead4, #dfc97c)' }}
-                  >
-                    <Iconify icon={venue.iconifyId} width={28} height={28} />
+                  <span className="amenity-card__border" aria-hidden />
+                  <span className="amenity-card__sheen" aria-hidden />
+                  <span className="amenity-card__shine" aria-hidden />
+                  <span className="amenity-card__index" aria-hidden>
+                    {String(i + 2).padStart(2, '0')}
+                  </span>
+                  <div className="amenity-card__inner">
+                    <div className="amenity-card__icon">
+                      <Iconify icon={venue.iconifyId} width={28} height={28} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="amenity-card__hook">{venue.hook}</p>
+                      <h3 className="amenity-card__title">{venue.title}</h3>
+                      <p className="amenity-card__desc">{venue.desc}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-gold-600 mb-1 leading-none">{venue.hook}</p>
-                    <h3 className="font-black text-gray-900 text-base leading-snug tracking-tight mb-2">{venue.title}</h3>
-                    <p className="text-xs text-gray-500 leading-relaxed">{venue.desc}</p>
-                  </div>
-                </motion.div>
+                </div>
               </MotionItem>
             ))}
 
             <MotionItem variants={fadeUp}>
-              <motion.div
-                className="relative rounded-2xl overflow-hidden p-5 h-full flex flex-col gap-4"
-                style={{ background: 'linear-gradient(155deg, #07112a 0%, #0d1b3e 60%, #121f42 100%)', boxShadow: '0 4px 24px rgba(0,0,0,0.18)' }}
-                whileHover={{ y: -4 }}
-                transition={transition.hover}
+              <div
+                className="amenity-card amenity-card--featured h-full"
+                style={{ '--card-glow-delay': '2.5s', '--shine-delay': '1.6s' }}
               >
-                <span
-                  className="absolute right-3 top-1 font-extrabold leading-none select-none pointer-events-none"
-                  style={{ fontSize: '5rem', color: 'rgba(255,255,255,0.05)' }}
-                  aria-hidden
-                >07</span>
-                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Iconify icon="noto:party-popper" width={28} height={28} />
+                <span className="amenity-card__border" aria-hidden />
+                <span className="amenity-card__sheen" aria-hidden />
+                <span className="amenity-card__shine" aria-hidden />
+                <span className="amenity-card__index" aria-hidden>07</span>
+                <div className="amenity-card__inner">
+                  <div className="amenity-card__icon">
+                    <Iconify icon="noto:party-popper" width={28} height={28} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="amenity-card__hook">Night life</p>
+                    <h3 className="amenity-card__title">D&apos;SuperClub</h3>
+                    <p className="amenity-card__desc">
+                      Live DJs, loud beats, and flowing drinks. Where the night comes alive.
+                    </p>
+                  </div>
+                  <div className="amenity-card__footer">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-gold-400 animate-pulse flex-shrink-0" aria-hidden />
+                    Open nights
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-gold-400 mb-1 leading-none">Night life</p>
-                  <h3 className="font-black text-white text-base leading-snug tracking-tight mb-2">D&apos;SuperClub</h3>
-                  <p className="text-gray-400 text-xs leading-relaxed">
-                    Live DJs, loud beats, and flowing drinks. Where the night comes alive.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-gold-400 animate-pulse flex-shrink-0" aria-hidden />
-                  <span className="text-xs text-gray-500 font-medium">Open nights</span>
-                </div>
-              </motion.div>
+              </div>
             </MotionItem>
           </MotionStagger>
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* ── CONTACT / FIND US ─────────────────────────────────────────────────── */}
       <section id="contact" className="bg-brand-cream dark:bg-brand-navy-950 py-24 px-4 scroll-mt-20">

@@ -54,24 +54,28 @@ Server-side totals must match whatever the separate backend enforces.
 - [ ] Copy `.env.example` → `.env.local` (dev) and set hosting env vars (prod):
 
 ```env
-VITE_SUPABASE_URL=https://YOUR_API_PROJECT.supabase.co
+VITE_SUPABASE_URL=https://pvjvpbffrcrdwqxewuxa.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Point these at the **backend project** for this client. Never put `service_role` in the frontend.
+Point these at the **Daruhan** Supabase project. Never put `service_role` in the frontend.
+
+- [ ] **Google sign-in (new):** follow **[GOOGLE_AUTH_SETUP.md](./GOOGLE_AUTH_SETUP.md)** — create a **new** Google Cloud OAuth client for Daruhan (do not reuse another client’s credentials).
 
 ---
 
 ## 5. Deploy
 
 - [ ] Deploy to Netlify / Vercel (or similar)
-- [ ] Add deploy URL to backend Auth redirect allowlist (handled in the backend project)
+- [ ] Add production `/auth/callback` to Supabase Auth redirect URLs (see GOOGLE_AUTH_SETUP.md)
+- [ ] Add production origin to Google Cloud authorized JavaScript origins
 
 ---
 
 ## 6. Smoke test (against live backend)
 
 - [ ] Register → onboarding → book court (all wizard steps)
+- [ ] **Continue with Google** (after [GOOGLE_AUTH_SETUP.md](./GOOGLE_AUTH_SETUP.md))
 - [ ] Hold created → submit payment reference
 - [ ] Admin: verify payment → booking confirmed
 - [ ] Cancel booking (user + admin)

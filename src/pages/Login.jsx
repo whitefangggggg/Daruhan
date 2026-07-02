@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { formatAuthError } from '../utils/authErrors'
+import { getOAuthCallbackUrl, saveAuthRedirect } from '../lib/authRedirect'
 import BrandLogo from '../components/BrandLogo'
 import { SITE } from '../config/site'
 import { Link, useLocation } from 'react-router-dom'
@@ -96,6 +97,12 @@ export default function Login() {
   const [notice, setNotice] = useState(null)
   const submittingRef = useRef(false)
 
+  useEffect(() => {
+    if (location.state?.oauthError) {
+      setError(formatAuthError(location.state.oauthError))
+    }
+  }, [location.state?.oauthError])
+
   function switchMode(m) {
     setMode(m)
     setError(null)
@@ -177,9 +184,18 @@ export default function Login() {
     setGoogleLoading(true)
     setError(null)
     setNotice(null)
+
+    saveAuthRedirect(redirectTo)
+
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/onboarding` },
+      options: {
+        redirectTo: getOAuthCallbackUrl(),
+        queryParams: {
+          prompt: 'select_account',
+          access_type: 'online',
+        },
+      },
     })
     if (oauthError) {
       setError(formatAuthError(oauthError.message))
@@ -221,8 +237,12 @@ export default function Login() {
           {notice && <StatusMessage type="success" className="mb-5">{notice}</StatusMessage>}
           {error && <StatusMessage type="error" className="mb-5">{error}</StatusMessage>}
 
-          <button onClick={handleGoogle} disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-800/80 hover:border-gray-300 transition-all shadow-sm disabled:opacity-60 mb-5">
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 min-h-[2.75rem] py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-800/80 hover:border-gray-300 transition-all shadow-sm disabled:opacity-60 mb-5"
+          >
             {googleLoading
               ? <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
               : <GoogleIcon />}

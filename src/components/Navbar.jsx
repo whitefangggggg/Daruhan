@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
+import { useMobileMenu } from '../hooks/useMobileMenu'
 import { supabase } from '../lib/supabaseClient'
 import Avatar from './Avatar'
 import NotificationBell from './NotificationBell'
@@ -23,6 +24,8 @@ const AUTH_LINKS = [
   { label: 'Bookings', to: '/my-bookings', icon: ClipboardList, iconVariant: 'blue' },
   { label: 'Guide', to: '/guide', icon: BookOpen, iconVariant: 'purple' },
 ]
+
+const MOBILE_MENU_ID = 'main-mobile-nav'
 
 function NavLink({ to, label, isActive, onClick, className = '', darkNav = false }) {
   const base = darkNav
@@ -50,6 +53,47 @@ function NavLink({ to, label, isActive, onClick, className = '', darkNav = false
   )
 }
 
+function NavbarSkeleton({ dark = false }) {
+  return (
+    <nav
+      className="sticky top-0 z-50 nav-safe-top"
+      style={{
+        background: dark ? '#0f1a2e' : '#ffffff',
+        borderBottom: dark ? '1px solid rgba(212, 188, 106, 0.18)' : '1px solid #e8d5a3',
+      }}
+      aria-hidden
+    >
+      <div className="max-w-6xl mx-auto nav-safe-x h-16 flex items-center gap-3">
+        <div className={`h-5 w-24 rounded-md animate-pulse ${dark ? 'bg-white/10' : 'bg-gray-200'}`} />
+      </div>
+    </nav>
+  )
+}
+
+function MobileThemeToggle({ activeTheme, onToggle, darkNav }) {
+  const label = activeTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+  const iconClass = darkNav
+    ? 'text-white/80'
+    : 'text-gray-600 dark:text-gray-300'
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`nav-mobile-link w-full gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+        darkNav
+          ? 'text-white/80 hover:bg-white/10 hover:text-white'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60 hover:text-brand-gold-600 dark:hover:text-brand-gold-400'
+      }`}
+    >
+      <span className={`nav-icon-btn ${darkNav ? 'hover:bg-white/10' : 'hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60'} ${iconClass}`}>
+        {activeTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+      </span>
+      {label}
+    </button>
+  )
+}
+
 export default function Navbar() {
   const { user, profile, loading } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -58,12 +102,21 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const menuButtonRef = useRef(null)
+
+  const handleCloseMenu = useCallback(() => {
+    setMenuOpen(false)
+    requestAnimationFrame(() => menuButtonRef.current?.focus())
+  }, [])
+
+  const { menuRef, close: closeMenu } = useMobileMenu(menuOpen, handleCloseMenu)
 
   const isLanding = location.pathname === '/'
   const isLoginPage = location.pathname === '/login'
   const isPublicPage = isLanding || isLoginPage
   const darkNav = (isLanding || isLoginPage) && !user
   const activeTheme = isPublicPage && !isLanding && !isLoginPage ? 'light' : theme
+  const showThemeToggle = !isPublicPage
 
   useEffect(() => {
     function handleClick(e) {
@@ -77,6 +130,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false)
+    setDropdownOpen(false)
   }, [location.pathname, location.hash])
 
   async function handleSignOut() {
@@ -102,7 +156,11 @@ export default function Navbar() {
     }
   }
 
-  if (loading) return null
+  function toggleMobileMenu() {
+    setMenuOpen(open => !open)
+  }
+
+  if (loading) return <NavbarSkeleton dark={darkNav} />
 
   function handleLogoClick(e) {
     if (location.pathname === '/') {
@@ -137,16 +195,27 @@ export default function Navbar() {
       : 'text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-brand-gold-600 px-3 py-2 rounded-lg hover:bg-brand-gold-50/60 transition-colors'
 
   const menuIconClass = darkNav
-    ? 'p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors'
-    : 'p-2 text-gray-500 dark:text-gray-400 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 rounded-lg hover:bg-brand-gold-50 dark:hover:bg-slate-800 transition-colors'
+    ? 'nav-icon-btn text-white/70 hover:text-white hover:bg-white/10'
+    : 'nav-icon-btn text-gray-500 dark:text-gray-400 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 hover:bg-brand-gold-50 dark:hover:bg-slate-800'
+
+  const mobileLinkClass = (active = false) => {
+    if (darkNav) {
+      return active
+        ? 'nav-mobile-link px-3 py-2 rounded-xl text-sm font-medium bg-white/10 text-white'
+        : 'nav-mobile-link px-3 py-2 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors'
+    }
+    return active
+      ? 'nav-mobile-link gap-3 px-3 py-2 rounded-xl text-sm font-medium bg-brand-gold-50 dark:bg-brand-navy-900/30 text-brand-navy-900 dark:text-brand-gold-400'
+      : 'nav-mobile-link gap-3 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-colors'
+  }
 
   return (
-    <nav className="sticky top-0 z-50" style={navSurface}>
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
+    <nav className="sticky top-0 z-50 nav-safe-top" style={navSurface}>
+      <div className="max-w-6xl mx-auto nav-safe-x h-16 flex items-center gap-2 sm:gap-3">
         <Link
           to="/"
           onClick={handleLogoClick}
-          className="font-bold text-lg tracking-tight transition-colors flex-shrink-0 text-brand-gold-400 hover:text-brand-gold-300 dark:text-brand-gold-300 dark:hover:text-brand-gold-200"
+          className="font-bold text-lg tracking-tight transition-colors flex-shrink-0 min-h-[2.75rem] inline-flex items-center text-brand-gold-400 hover:text-brand-gold-300 dark:text-brand-gold-300 dark:hover:text-brand-gold-200"
         >
           {SITE.name}
         </Link>
@@ -171,11 +240,11 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           {user ? (
             <>
-              {!isPublicPage && (
+              {showThemeToggle && (
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 hover:text-brand-gold-600 hover:bg-brand-gold-50 dark:text-gray-400 dark:hover:text-brand-gold-400 dark:hover:bg-slate-800 transition-colors"
+                  className="nav-icon-btn rounded-full text-gray-500 hover:text-brand-gold-600 hover:bg-brand-gold-50 dark:text-gray-400 dark:hover:text-brand-gold-400 dark:hover:bg-slate-800"
                   aria-label="Toggle theme"
                 >
                   {activeTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -250,30 +319,23 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="md:hidden flex items-center gap-2 ml-auto">
+        <div className="md:hidden flex items-center gap-1 sm:gap-2 ml-auto">
           {user && (
             <>
-              {!isPublicPage && (
-                <button
-                  type="button"
-                  className={menuIconClass}
-                  onClick={toggleTheme}
-                  aria-label="Toggle theme"
-                >
-                  {activeTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-              )}
               <NotificationBell onNavigate={() => setMenuOpen(false)} />
-              <Link to="/book" className="btn-primary text-xs py-2 px-3">
+              <Link to="/book" className="btn-primary text-sm min-h-[2.75rem] inline-flex items-center px-4">
                 Book
               </Link>
             </>
           )}
           <button
+            ref={menuButtonRef}
             type="button"
             className={menuIconClass}
-            onClick={() => setMenuOpen(o => !o)}
+            onClick={toggleMobileMenu}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls={MOBILE_MENU_ID}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -281,8 +343,23 @@ export default function Navbar() {
       </div>
 
       {menuOpen && (
+        <button
+          type="button"
+          className="nav-mobile-backdrop md:hidden"
+          aria-label="Close menu"
+          onClick={closeMenu}
+          tabIndex={-1}
+        />
+      )}
+
+      {menuOpen && (
         <div
-          className={`md:hidden border-t max-h-[calc(100svh-4rem)] overflow-y-auto ${
+          ref={menuRef}
+          id={MOBILE_MENU_ID}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+          className={`md:hidden relative z-50 border-t nav-mobile-drawer ${
             darkNav
               ? 'border-white/10 bg-brand-navy-900'
               : 'border-brand-gold-100 dark:border-slate-700 bg-white dark:bg-slate-900'
@@ -305,14 +382,10 @@ export default function Navbar() {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                      isActive(link.to)
-                        ? 'bg-brand-gold-50 dark:bg-brand-navy-900/30 text-brand-navy-900 dark:text-brand-gold-400'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60 hover:text-brand-gold-600 dark:hover:text-brand-gold-400'
-                    }`}
+                    className={mobileLinkClass(isActive(link.to))}
                   >
                     {link.emoji ? (
-                      <span className="w-7 h-7 rounded-lg bg-brand-gold-50 dark:bg-brand-navy-900/30 flex items-center justify-center">
+                      <span className="w-7 h-7 rounded-lg bg-brand-gold-50 dark:bg-brand-navy-900/30 flex items-center justify-center flex-shrink-0">
                         <AppEmoji name={link.emoji} size={18} />
                       </span>
                     ) : (
@@ -324,15 +397,22 @@ export default function Navbar() {
                 <Link
                   to="/profile"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60 hover:text-brand-gold-600 dark:hover:text-brand-gold-400"
+                  className={mobileLinkClass()}
                 >
                   <IconBadge icon={User} />
                   Profile
                 </Link>
+                {showThemeToggle && (
+                  <MobileThemeToggle
+                    activeTheme={activeTheme}
+                    onToggle={toggleTheme}
+                    darkNav={darkNav}
+                  />
+                )}
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mt-1"
+                  className="nav-mobile-link gap-3 px-3 py-2 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mt-1"
                 >
                   <IconBadge icon={LogOut} variant="red" />
                   Sign Out
@@ -346,11 +426,7 @@ export default function Navbar() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setMenuOpen(false)}
-                  className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                    darkNav
-                      ? 'text-white/80 hover:bg-white/10 hover:text-white'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60 hover:text-brand-gold-600 dark:hover:text-brand-gold-400'
-                  }`}
+                  className={mobileLinkClass(isActive(link.to))}
                 >
                   {link.label}
                 </Link>
@@ -358,21 +434,21 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={openRates}
-                className={`text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  darkNav
-                    ? 'text-white/80 hover:bg-white/10 hover:text-white'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/60 dark:hover:bg-slate-800/60 hover:text-brand-gold-600 dark:hover:text-brand-gold-400'
-                }`}
+                className={`text-left ${mobileLinkClass()}`}
               >
                 Rates
               </button>
               <div className="flex flex-col gap-2 mt-3 px-1">
-                <Link to="/book" className="btn-primary text-center text-sm" onClick={() => setMenuOpen(false)}>
+                <Link
+                  to="/book"
+                  className="btn-primary text-center text-sm min-h-[2.75rem] inline-flex items-center justify-center"
+                  onClick={() => setMenuOpen(false)}
+                >
                   Book a Court
                 </Link>
                 <Link
                   to="/login"
-                  className={`text-center text-sm font-semibold py-2 ${darkNav ? 'text-white/80' : 'text-gray-600 dark:text-gray-300'}`}
+                  className={`nav-mobile-link justify-center text-sm font-semibold py-2 ${darkNav ? 'text-white/80' : 'text-gray-600 dark:text-gray-300'}`}
                   onClick={() => setMenuOpen(false)}
                 >
                   Sign In

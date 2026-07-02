@@ -1,9 +1,6 @@
 import { format } from 'date-fns'
 import { getBookingEndHour } from '../utils/bookingHours'
-import { TRAINER_RATE, trainerExtraTotal } from '../utils/parseBookingNotes'
-
-const PADDLE_RATE = 100
-const BALL_RATE = 100
+import { PADDLE_RATE, BALL_RATE, extrasRentalTotal, trainerExtraTotal } from '../utils/parseBookingNotes'
 
 function formatHour(h) {
   if (h === 0 || h === 24) return '12:00 MN'
@@ -31,7 +28,7 @@ export default function BookingPriceBreakdown({
   totalPrice,
   paddleRate = PADDLE_RATE,
   ballRate = BALL_RATE,
-  trainerRate = TRAINER_RATE,
+  trainerRate,
 }) {
   const endHour = getBookingEndHour(startHour, duration)
   const trainerCost = trainerExtraTotal(trainerHours, trainerHeads, trainerRate)
@@ -90,22 +87,26 @@ export default function BookingPriceBreakdown({
         {paddles > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-300">
-              Paddle rental ({paddles} × ₱{paddleRate.toLocaleString()})
+              Paddle rental ({duration}h × ₱{paddleRate.toLocaleString()}/hr)
             </span>
-            <span className="font-semibold text-gray-900 dark:text-white">₱{(paddles * paddleRate).toLocaleString()}</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              ₱{(duration * paddleRate).toLocaleString()}
+            </span>
           </div>
         )}
 
         {balls > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-300">
-              Ball rental ({balls} × ₱{ballRate.toLocaleString()})
+              Ball rental ({duration}h × ₱{ballRate.toLocaleString()}/hr)
             </span>
-            <span className="font-semibold text-gray-900 dark:text-white">₱{(balls * ballRate).toLocaleString()}</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              ₱{(duration * ballRate).toLocaleString()}
+            </span>
           </div>
         )}
 
-        {trainerHours > 0 && trainerHeads > 0 && (
+        {trainerHours > 0 && trainerHeads > 0 && trainerRate != null && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-300">
               Trainer ({trainerHours}h × {trainerHeads} pax × ₱{trainerRate.toLocaleString()}/hr)

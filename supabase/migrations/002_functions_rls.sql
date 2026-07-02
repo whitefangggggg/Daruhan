@@ -53,23 +53,24 @@ BEGIN
 END;
 $$;
 
--- Mirror src/utils/parseBookingNotes.js extras
+-- Mirror src/utils/parseBookingNotes.js extras (₱50/hr paddle & ball)
 CREATE OR REPLACE FUNCTION public.calculate_extras_total(
   p_paddles int,
   p_balls int,
   p_trainer_hours int,
-  p_trainer_heads int
+  p_trainer_heads int,
+  p_duration_hours int DEFAULT 1
 )
 RETURNS numeric
 LANGUAGE plpgsql
 IMMUTABLE
 AS $$
+DECLARE
+  v_duration int := GREATEST(COALESCE(p_duration_hours, 1), 1);
 BEGIN
   RETURN
-    GREATEST(COALESCE(p_paddles, 0), 0) * 100
-    + GREATEST(COALESCE(p_balls, 0), 0) * 100
-    + GREATEST(COALESCE(p_trainer_hours, 0), 0)
-      * GREATEST(COALESCE(p_trainer_heads, 0), 0) * 300;
+    (CASE WHEN COALESCE(p_paddles, 0) > 0 THEN 50 * v_duration ELSE 0 END)
+    + (CASE WHEN COALESCE(p_balls, 0) > 0 THEN 50 * v_duration ELSE 0 END);
 END;
 $$;
 
@@ -86,7 +87,7 @@ AS $$
   SELECT p_start1 < (p_start2 + p_dur2) AND p_start2 < (p_start1 + p_dur1);
 $$;
 
--- Venue closed 5AM–8AM (SITE.venue.operatingHours)
+-- Venue closed 5AM–7AM (SITE.venue.operatingHours: open 7, close 5)
 CREATE OR REPLACE FUNCTION public.booking_range_has_closed_hours(
   p_start_hour int,
   p_duration_hours int
@@ -101,7 +102,7 @@ DECLARE
 BEGIN
   FOR i IN 0..(p_duration_hours - 1) LOOP
     h := (p_start_hour + i) % 24;
-    IF h >= 5 AND h < 8 THEN
+    IF h >= 5 AND h < 7 THEN
       RETURN true;
     END IF;
   END LOOP;
@@ -236,6 +237,10 @@ DROP POLICY IF EXISTS payment_methods_select ON public.payment_methods;
 CREATE POLICY payment_methods_select ON public.payment_methods
   FOR SELECT TO authenticated
   USING (is_active = true);
+
+-- Table-level grants (RLS policies alone are not enough)
+GRANT SELECT ON TABLE public.courts TO authenticated;
+GRANT SELECT ON TABLE public.payment_methods TO authenticated;
 
 -- ── bookings ───────────────────────────────────────────────────────────────────
 -- Inserts only via SECURITY DEFINER RPCs (no INSERT policy for authenticated)

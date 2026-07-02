@@ -70,7 +70,14 @@ function createSupabaseStub() {
 }
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: false,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    })
   : createSupabaseStub()
 
 if (import.meta.env.DEV && !isSupabaseConfigured) {

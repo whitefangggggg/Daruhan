@@ -23,7 +23,9 @@ In **SQL Editor**, run these files **in order** (copy/paste full contents of eac
 | 1 | `supabase/migrations/001_schema.sql` |
 | 2 | `supabase/migrations/002_functions_rls.sql` |
 | 3 | `supabase/migrations/003_rpc_triggers.sql` |
-| 4 | `supabase/seed.sql` |
+| 4 | `supabase/migrations/004_operating_hours_7am.sql` (if upgrading from 8AM open) |
+| 5 | `supabase/migrations/005_table_grants.sql` |
+| 6 | **`supabase/seed.sql`** ← courts + QR PH payment (required for booking) |
 
 Each file is idempotent where possible (`IF NOT EXISTS`, `DROP POLICY IF EXISTS`).
 
@@ -34,12 +36,19 @@ Each file is idempotent where possible (`IF NOT EXISTS`, `DROP POLICY IF EXISTS`
 **Authentication → URL configuration**
 
 - **Site URL:** `http://localhost:5173` (dev) and your production URL  
-- **Redirect URLs:** add both dev and prod origins, plus `/onboarding` if using Google OAuth
+- **Redirect URLs:** add each app callback (required for Google OAuth):
+
+  ```
+  http://localhost:5173/auth/callback
+  https://your-production-domain/auth/callback
+  ```
 
 **Authentication → Providers**
 
-- Email: on (confirm email on or off — frontend handles both)  
-- Google: optional; redirect goes to `/onboarding`
+- **Email:** on (confirm email on or off — frontend handles both)  
+- **Google:** see **[GOOGLE_AUTH_SETUP.md](./GOOGLE_AUTH_SETUP.md)** for Google Cloud Console + Supabase steps
+
+OAuth flow: Google → Supabase → `/auth/callback` → onboarding (new users) → `/home` or saved redirect (e.g. `/book`).
 
 ---
 
@@ -82,7 +91,7 @@ Never put the `service_role` key in the frontend.
 |-------|---------|
 | `profiles` | Players/admins; `role = 'admin'` for dashboard |
 | `courts` | 4 courts (seeded) |
-| `payment_methods` | GCash / GoTyme (seeded) |
+| `payment_methods` | QR PH (seeded) |
 | `bookings` | Court holds, payments, admin reserves |
 | `blocked_slots` | Maintenance blocks + open-play blocks |
 | `notifications` | User alerts (written by DB triggers) |
@@ -118,15 +127,16 @@ Must match `src/lib/pricing.js`:
 |-------|------|
 | 7AM – 12MN (incl. midnight) | ₱300/hr |
 | 1AM – 5AM | ₱350/hr |
-| 5AM – 8AM | **closed** (rejected by RPC) |
+| 5AM – 7AM | **closed** (rejected by RPC) |
 
-Extras (`create_booking_hold_auto`): paddles ₱100, balls ₱100, trainer ₱300/hr/head.
+Extras (`create_booking_hold_auto`): paddle rental ₱50/hr, ball rental ₱50/hr (no trainer).
 
 ---
 
 ## 9. Smoke test
 
 - [ ] Register → sign in → `/book` → create hold  
+- [ ] **Continue with Google** → onboarding → `/book` (see [GOOGLE_AUTH_SETUP.md](./GOOGLE_AUTH_SETUP.md))  
 - [ ] Submit payment reference → admin sees “paid verify”  
 - [ ] Admin confirms → user gets notification  
 - [ ] Admin reserve (`payment_reference = 'ADMIN'`)  

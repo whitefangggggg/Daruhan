@@ -75,7 +75,7 @@ export default function NotificationBell({ onNavigate }) {
           setOpen(next)
           if (next) refetch()
         }}
-        className="relative flex items-center justify-center w-10 h-10 rounded-full text-gray-500 dark:text-gray-400 hover:text-brand-gold-600 hover:bg-brand-gold-50 border border-transparent hover:border-brand-gold-200 transition-colors"
+        className="relative flex items-center justify-center nav-icon-btn rounded-full text-gray-500 dark:text-gray-400 hover:text-brand-gold-600 hover:bg-brand-gold-50 border border-transparent hover:border-brand-gold-200 transition-colors"
         aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
         aria-expanded={open}
         aria-haspopup="dialog"

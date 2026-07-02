@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState, useCallback } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabaseClient'
+import { consumeAuthRedirect } from '../lib/authRedirect'
 import BrandLogo from '../components/BrandLogo'
 import { SITE } from '../config/site'
 import { Check } from '../components/ui/Icon'
@@ -15,7 +16,12 @@ const PHASE_MS = {
 
 export default function Onboarding() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, profile, refreshProfile } = useAuth()
+
+  const resolveDestination = useCallback(() => {
+    return consumeAuthRedirect() || location.state?.redirectTo || '/home'
+  }, [location.state?.redirectTo])
 
   const [phase, setPhase] = useState('welcome')
   const [fullName, setFullName] = useState('')
@@ -36,9 +42,9 @@ export default function Onboarding() {
       return
     }
     if (profile?.onboarding_completed) {
-      navigate('/home', { replace: true })
+      navigate(resolveDestination(), { replace: true })
     }
-  }, [user, profile, navigate])
+  }, [user, profile, navigate, resolveDestination])
 
   useEffect(() => {
     if (!profile) return
@@ -52,10 +58,10 @@ export default function Onboarding() {
     const delay = phase === 'welcome' ? PHASE_MS.welcome : PHASE_MS.done
     const timer = setTimeout(() => {
       if (phase === 'welcome') setPhase('details')
-      else navigate('/home', { replace: true })
+      else navigate(resolveDestination(), { replace: true })
     }, delay)
     return () => clearTimeout(timer)
-  }, [phase, navigate])
+  }, [phase, navigate, resolveDestination])
 
   async function handleSubmit(e) {
     e.preventDefault()

@@ -24,9 +24,9 @@ import {
   clearBookingDraft,
   draftHasProgress,
 } from '../utils/bookingDraft'
-import { TRAINER_RATE, trainerExtraTotal } from '../utils/parseBookingNotes'
+import { PADDLE_RATE, BALL_RATE, extrasRentalTotal } from '../utils/parseBookingNotes'
 import { formatHoldError } from '../utils/bookingHoldErrors'
-import { getBookingEndHour, getMaxDurationForStart, getBlockedHoursForDate } from '../utils/bookingHours'
+import { getBookingEndHour, getMaxBookableDuration, getMaxDurationForDate, getBlockedHoursForDate } from '../utils/bookingHours'
 import {
   resolveBookingCourtIds,
   getBookedCourtCount,
@@ -41,11 +41,7 @@ import {
   shouldShowCourtDowngradeHint,
 } from '../utils/slotAvailability'
 import { transition as motionTransition } from '../lib/motion'
-import gcashLogo from '../assets/gcash-logo.png'
-import gotymeLogo from '../assets/gotyme-logo.png'
-
-const PADDLE_RATE = 100
-const BALL_RATE = 100
+import { getPaymentMethodLogo, resolvePaymentQrImageUrl } from '../lib/paymentMethods'
 
 const WIZARD_STEPS = ['Details', 'Time slot', 'Extras', 'Review', 'Payment']
 
@@ -64,16 +60,11 @@ const bookStepVariants = {
   }),
 }
 
-const PAYMENT_METHOD_BRAND = {
-  gcash: { image: gcashLogo },
-  gotyme: { image: gotymeLogo },
-}
-
-/** Common PH e-wallets / banks users may send from via InstaPay / PESONet */
+/** Banks / e-wallets users may pay from when scanning a QR PH code */
 const SENDER_PLATFORMS = [
   'GCash',
-  'GoTyme',
   'Maya',
+  'GoTyme',
   'BPI',
   'BDO',
   'Metrobank',
@@ -100,36 +91,6 @@ function StepLabel({ num, label, done, active }) {
         {done ? <Check size={12} strokeWidth={3} /> : num}
       </span>
       <span className="hidden sm:inline">{label}</span>
-    </div>
-  )
-}
-
-function TrainerHoursStepper({ value, max, onChange, unit = 'h' }) {
-  const display = unit === 'pax'
-    ? `${value} ${value === 1 ? 'person' : 'people'}`
-    : `${value}h`
-
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(1, value - 1))}
-        disabled={value <= 1}
-        className="w-8 h-8 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-gray-400 font-bold hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-all flex items-center justify-center text-lg disabled:opacity-30"
-      >
-        −
-      </button>
-      <span className="min-w-[5.5rem] text-center font-extrabold text-gray-800 dark:text-gray-100 tabular-nums text-sm">
-        {display}
-      </span>
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(max, value + 1))}
-        disabled={value >= max}
-        className="w-8 h-8 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-gray-400 font-bold hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-all flex items-center justify-center text-lg disabled:opacity-30"
-      >
-        +
-      </button>
     </div>
   )
 }
@@ -180,31 +141,6 @@ function ExtraToggle({ label, sublabel, checked, onChange, emoji, pricePreview, 
   )
 }
 
-function Counter({ label, sublabel, value, onChange, min = 0, max = 20, emoji }) {
-  return (
-    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
-      <div className="flex items-center gap-3">
-        <span className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-          <AppEmoji name={emoji} size={24} />
-        </span>
-        <div>
-          <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{label}</p>
-          <p className="text-xs text-gray-400">{sublabel}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={() => onChange(Math.max(min, value - 1))}
-          className="w-8 h-8 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-gray-400 font-bold hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-all flex items-center justify-center text-lg disabled:opacity-30 disabled:hover:border-gray-200 disabled:dark:hover:border-slate-600"
-          disabled={value <= min}>−</button>
-        <span className="w-8 text-center font-extrabold text-gray-800 dark:text-gray-100">{value}</span>
-        <button type="button" onClick={() => onChange(Math.min(max, value + 1))}
-          className="w-8 h-8 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-gray-400 font-bold hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-all flex items-center justify-center text-lg disabled:opacity-30 disabled:hover:border-gray-200 disabled:dark:hover:border-slate-600"
-          disabled={value >= max}>+</button>
-      </div>
-    </div>
-  )
-}
-
 function RateBracketsReference() {
   return (
     <div className="space-y-3">
@@ -236,15 +172,14 @@ function RateBracketsReference() {
 }
 
 function PaymentMethodBrand({ name }) {
-  const key = (name || '').toLowerCase().replace(/\s+/g, '')
-  const brand = PAYMENT_METHOD_BRAND[key]
+  const logo = getPaymentMethodLogo(name)
 
-  if (brand?.image) {
+  if (logo) {
     return (
       <img
-        src={brand.image}
+        src={logo}
         alt={name}
-        className="h-10 w-auto max-w-[130px] object-contain"
+        className="h-10 w-auto max-w-[140px] object-contain"
       />
     )
   }
@@ -277,8 +212,6 @@ export default function Book() {
   const [startHour, setStartHour] = useState(null)
   const [paddles, setPaddles] = useState(0)
   const [balls, setBalls] = useState(0)
-  const [trainerHours, setTrainerHours] = useState(0)
-  const [trainerHeads, setTrainerHeads] = useState(1)
   const [timeGuideOpen, setTimeGuideOpen] = useState(false)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -368,10 +301,9 @@ export default function Book() {
     || startHour !== null
     || paddles > 0
     || balls > 0
-    || trainerHours > 0
     || Boolean(notes.trim())
     || hasStep1Edits
-  ), [pendingBookingIds, step, startHour, paddles, balls, trainerHours, notes, hasStep1Edits])
+  ), [pendingBookingIds, step, startHour, paddles, balls, notes, hasStep1Edits])
 
   const needsHoldRecovery = step === 5 && pendingBookingIds.length === 0 && !completedBooking
 
@@ -394,8 +326,6 @@ export default function Book() {
     startHour,
     paddles,
     balls,
-    trainerHours,
-    trainerHeads,
     notes,
     pendingBookingIds,
     assignedHolds,
@@ -408,7 +338,7 @@ export default function Book() {
     selectedPaymentMethodId,
   }), [
     step, bookingName, contactPhone, courtQuantity, selectedDate, duration, startHour,
-    paddles, balls, trainerHours, trainerHeads, notes, pendingBookingIds, assignedHolds, paymentRefPhase, paymentReference,
+    paddles, balls, notes, pendingBookingIds, assignedHolds, paymentRefPhase, paymentReference,
     paymentSenderName, sendingFromDifferentPlatform, paymentSenderPlatform,
     paymentSenderPlatformOther, selectedPaymentMethodId,
   ])
@@ -433,8 +363,6 @@ export default function Book() {
     setStartHour(null)
     setPaddles(0)
     setBalls(0)
-    setTrainerHours(0)
-    setTrainerHeads(1)
     setNotes('')
     setPendingBookingIds([])
     setAssignedHolds([])
@@ -456,12 +384,8 @@ export default function Book() {
     setSelectedDate(draft.selectedDate ?? format(new Date(), 'yyyy-MM-dd'))
     setDuration(draft.duration ?? 1)
     setStartHour(draft.startHour ?? null)
-    setPaddles(draft.paddles ?? 0)
-    setBalls(draft.balls ?? 0)
-    const restoredTrainerHours = draft.trainerHours
-      ?? (draft.wantsTrainer || (draft.trainers ?? 0) > 0 ? (draft.duration ?? 1) : 0)
-    setTrainerHours(Math.min(restoredTrainerHours, draft.duration ?? 1))
-    setTrainerHeads(Math.max(1, draft.trainerHeads ?? 1))
+    setPaddles(draft.paddles > 0 ? 1 : 0)
+    setBalls(draft.balls > 0 ? 1 : 0)
     setNotes(draft.notes ?? '')
     setPendingBookingIds(
       draft.pendingBookingIds?.length
@@ -707,6 +631,23 @@ export default function Book() {
     if (!stillExists) setSelectedPaymentMethodId(null)
   }, [paymentMethods, selectedPaymentMethodId])
 
+  useEffect(() => {
+    if (paymentMethods.length === 1) {
+      setSelectedPaymentMethodId(paymentMethods[0].id)
+    }
+  }, [paymentMethods])
+
+  useEffect(() => {
+    if (
+      step === 5
+      && paymentMethods.length === 1
+      && selectedPaymentMethodId
+      && paymentRefPhase === 'select-method'
+    ) {
+      setPaymentRefPhase('qr')
+    }
+  }, [step, paymentMethods.length, selectedPaymentMethodId, paymentRefPhase])
+
   const skipStartHourResetRef = useRef(false)
   const prevDurationRef = useRef(duration)
   useEffect(() => {
@@ -721,9 +662,15 @@ export default function Book() {
     }
   }, [duration])
 
+  const maxDuration = useMemo(() => (
+    startHour != null
+      ? getMaxBookableDuration(startHour, blockedHours)
+      : getMaxDurationForDate(blockedHours)
+  ), [startHour, blockedHours])
+
   useEffect(() => {
-    if (trainerHours > duration) setTrainerHours(duration)
-  }, [duration, trainerHours])
+    if (duration > maxDuration) setDuration(Math.max(1, maxDuration))
+  }, [duration, maxDuration])
 
   useEffect(() => {
     if (step < 4 || step > 5) {
@@ -773,13 +720,20 @@ export default function Book() {
   const courtCount = getBookedCourtCount(courtQuantity)
   const pricePerCourt = startHour !== null ? calculateTotal(startHour, duration) : 0
   const courtCost = pricePerCourt * courtCount
-  const trainerCost = trainerExtraTotal(trainerHours, trainerHeads)
-  const extrasCost = (paddles * PADDLE_RATE) + (balls * BALL_RATE) + trainerCost
+  const extrasCost = extrasRentalTotal({ paddles, balls, durationHours: duration })
   const totalPrice = courtCost + extrasCost
-  const maxDuration = startHour != null ? getMaxDurationForStart(startHour) : 24
   const bookingEndHour = startHour !== null ? getBookingEndHour(startHour, duration) : null
   const courtLabel = formatCourtSelectionLabel(courts, courtQuantity, assignedHolds)
   const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethodId) ?? null
+  const paymentQrSrc = selectedMethod
+    ? resolvePaymentQrImageUrl(selectedMethod, {
+        totalPrice,
+        bookingName: bookingName.trim(),
+        courtName: courtLabel,
+        date: selectedDate,
+      })
+    : null
+  const singlePaymentMethod = paymentMethods.length === 1
   const resolvedSenderPlatform = paymentSenderPlatform === 'Other'
     ? paymentSenderPlatformOther.trim()
     : paymentSenderPlatform
@@ -814,11 +768,8 @@ export default function Book() {
 
   function buildFullNotes() {
     const extrasNote = [
-      paddles > 0 ? `${paddles} paddle rental${paddles > 1 ? 's' : ''} (₱${paddles * PADDLE_RATE})` : '',
-      balls > 0 ? `${balls} ball${balls > 1 ? 's' : ''} (₱${balls * BALL_RATE})` : '',
-      trainerHours > 0
-        ? `trainer (${trainerHours}h × ${trainerHeads} pax × ₱${TRAINER_RATE}/hr)`
-        : '',
+      paddles > 0 ? `paddle rental (${duration}h × ₱${PADDLE_RATE}/hr)` : '',
+      balls > 0 ? `ball rental (${duration}h × ₱${BALL_RATE}/hr)` : '',
     ].filter(Boolean).join(', ')
     return [
       `Booked under: ${bookingName.trim()}`,
@@ -981,10 +932,10 @@ export default function Book() {
       p_duration_hours: duration,
       p_notes: fullNotes,
       p_court_ids: activeCourtIds,
-      p_paddles: paddles,
-      p_balls: balls,
-      p_trainer_hours: trainerHours,
-      p_trainer_heads: trainerHours > 0 ? trainerHeads : 0,
+      p_paddles: paddles > 0 ? 1 : 0,
+      p_balls: balls > 0 ? 1 : 0,
+      p_trainer_hours: 0,
+      p_trainer_heads: 0,
       p_contact_phone: contactPhone.trim(),
       p_court_count: courtQuantity,
     })
@@ -1068,8 +1019,6 @@ export default function Book() {
         courtCost,
         paddles,
         balls,
-        trainerHours,
-        trainerHeads,
         userNotes: notes.trim(),
         totalPrice,
         paymentMethodName: selectedMethod?.name ?? null,
@@ -1282,14 +1231,16 @@ export default function Book() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setDuration(d => Math.min(maxDuration, Math.min(24, d + 1)))}
+                      onClick={() => setDuration(d => Math.min(maxDuration, d + 1))}
                       className="w-10 h-10 rounded-xl border-2 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 font-bold text-xl hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-colors flex items-center justify-center"
                     >
                       +
                     </button>
                   </div>
                   <p className="text-[11px] text-gray-400 text-center mt-4 leading-snug">
-                    Max {maxDuration}h for this start time · priced per bracket above
+                    {startHour != null
+                      ? `Max ${maxDuration}h from ${formatHour(startHour)} · venue closed 5AM–7AM`
+                      : `Up to ${maxDuration}h today · venue closed 5AM–7AM`}
                   </p>
                 </div>
 
@@ -1310,9 +1261,14 @@ export default function Book() {
                       Loading courts…
                     </div>
                   ) : courts.length === 0 ? (
-                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
-                      No active courts are available right now. Please try again later or contact support.
-                    </p>
+                    <div className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+                      <p>No active courts are available right now. Please try again later or contact support.</p>
+                      {import.meta.env.DEV && !courtsError && (
+                        <p className="text-xs mt-1.5 text-amber-700/90">
+                          Dev hint: if the <code className="font-mono">courts</code> table is empty in Supabase, run <code className="font-mono">supabase/seed.sql</code> in the SQL Editor (migration 004 only updates hours).
+                        </p>
+                      )}
+                    </div>
                   ) : availError ? (
                     <div className="rounded-xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-400">
                       <p>{availError}</p>
@@ -1352,73 +1308,24 @@ export default function Book() {
               className="card p-5 space-y-4"
             >
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 3 · Extras & notes</p>
-              <Counter
+              <ExtraToggle
                 emoji="paddle"
                 label="Paddle rental"
-                sublabel={`₱${PADDLE_RATE} per paddle`}
-                value={paddles}
-                onChange={setPaddles}
-                max={10}
+                sublabel={`₱${PADDLE_RATE} per hour`}
+                checked={paddles > 0}
+                onChange={on => setPaddles(on ? 1 : 0)}
+                pricePreview={paddles > 0 ? duration * PADDLE_RATE : null}
+                priceDetail={paddles > 0 ? `${duration}h × ₱${PADDLE_RATE}/hr` : null}
               />
-              <Counter
+              <ExtraToggle
                 emoji="ball"
-                label="Ball purchase"
-                sublabel={`₱${BALL_RATE} per ball`}
-                value={balls}
-                onChange={setBalls}
-                max={20}
+                label="Ball rental"
+                sublabel={`₱${BALL_RATE} per hour`}
+                checked={balls > 0}
+                onChange={on => setBalls(on ? 1 : 0)}
+                pricePreview={balls > 0 ? duration * BALL_RATE : null}
+                priceDetail={balls > 0 ? `${duration}h × ₱${BALL_RATE}/hr` : null}
               />
-              <div className="space-y-2">
-                <ExtraToggle
-                  emoji="fitness"
-                  label="Trainer"
-                  sublabel={`₱${TRAINER_RATE} per person, per hour`}
-                  checked={trainerHours > 0}
-                  onChange={on => {
-                    if (on) {
-                      setTrainerHours(duration)
-                      setTrainerHeads(1)
-                    } else {
-                      setTrainerHours(0)
-                    }
-                  }}
-                  pricePreview={trainerHours > 0 ? trainerCost : null}
-                  priceDetail={
-                    trainerHours > 0
-                      ? `${trainerHours}h × ${trainerHeads} ${trainerHeads === 1 ? 'person' : 'people'}`
-                      : null
-                  }
-                />
-                {trainerHours > 0 && (
-                  <div className="ml-3 space-y-2">
-                    {duration > 1 && (
-                      <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-brand-gold-200 dark:border-brand-gold-900/40 bg-white/80 dark:bg-slate-800/60">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Trainer hours</p>
-                          <p className="text-xs text-gray-400">Only need coaching for part of your session?</p>
-                        </div>
-                        <TrainerHoursStepper
-                          value={trainerHours}
-                          max={duration}
-                          onChange={setTrainerHours}
-                        />
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-brand-gold-200 dark:border-brand-gold-900/40 bg-white/80 dark:bg-slate-800/60">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Players with trainer</p>
-                        <p className="text-xs text-gray-400">How many people need coaching?</p>
-                      </div>
-                      <TrainerHoursStepper
-                        value={trainerHeads}
-                        max={20}
-                        onChange={setTrainerHeads}
-                        unit="pax"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Notes <span className="normal-case text-gray-400 font-normal">(optional)</span></label>
                 <textarea
@@ -1456,8 +1363,6 @@ export default function Book() {
                 courtCost={courtCost}
                 paddles={paddles}
                 balls={balls}
-                trainerHours={trainerHours}
-                trainerHeads={trainerHeads}
                 userNotes={notes.trim()}
                 totalPrice={totalPrice}
               />
@@ -1498,7 +1403,7 @@ export default function Book() {
               <>
 
               {/* ── Phase 1: choose payment method ── */}
-              {paymentRefPhase === 'select-method' && (
+              {paymentRefPhase === 'select-method' && !singlePaymentMethod && (
                 <div className="card p-5 space-y-4">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 5 · Payment method</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -1525,8 +1430,8 @@ export default function Book() {
                       <p>No payment methods are available yet.</p>
                       <p className="text-xs text-amber-700 dark:text-amber-300">
                         In Supabase, open <strong>Table Editor → payment_methods</strong> and make sure
-                        GCash / GoTyme rows exist with <code className="rounded bg-amber-100 dark:bg-amber-900/40 px-1">is_active = true</code>,
-                        or re-run <code className="rounded bg-amber-100 dark:bg-amber-900/40 px-1">002_payment_methods.sql</code>.
+                        a <strong>QR PH</strong> row exists with <code className="rounded bg-amber-100 dark:bg-amber-900/40 px-1">is_active = true</code>,
+                        or re-run <code className="rounded bg-amber-100 dark:bg-amber-900/40 px-1">seed.sql</code>.
                       </p>
                       <button
                         type="button"
@@ -1568,7 +1473,7 @@ export default function Book() {
                 <div className="card p-5 space-y-4">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 5 · Scan &amp; pay</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Pay via <strong>{selectedMethod.name}</strong>. Make sure the amount is exact:
+                    Scan the <strong>QR PH</strong> code below and pay the exact amount:
                   </p>
 
                   <div
@@ -1586,7 +1491,11 @@ export default function Book() {
                   </div>
 
                   <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 p-6">
-                    <PaymentQrImage method={selectedMethod} onRetryLoad={fetchPaymentMethods} />
+                    <PaymentQrImage
+                      method={selectedMethod}
+                      qrSrc={paymentQrSrc}
+                      onRetryLoad={fetchPaymentMethods}
+                    />
                     {selectedMethod.account_name && (
                       <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 text-center">{selectedMethod.account_name}</p>
                     )}
@@ -1597,7 +1506,7 @@ export default function Book() {
                   </p>
 
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    This QR can receive transfers from other banks and e-wallets via InstaPay or PESONet.
+                    QR PH accepts transfers from any participating bank or e-wallet — low fees via InstaPay or PESONet.
                   </p>
 
                   <label className="flex items-start gap-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 cursor-pointer hover:border-brand-gold-200 dark:hover:border-brand-gold-500 transition-colors">
@@ -1614,7 +1523,7 @@ export default function Book() {
                       className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-gold-500 focus:ring-brand-gold-500"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-200 leading-snug">
-                      I&apos;m sending from a <strong>different app or bank</strong> (not {selectedMethod.name})
+                      I paid using a <strong>different app or bank</strong> than the one shown on my receipt
                     </span>
                   </label>
                 </div>
@@ -1720,7 +1629,7 @@ export default function Book() {
         </motion.div>
 
         <div className="w-full space-y-2">
-          {(step < 5 || (step === 5 && paymentRefPhase === 'select-method' && !needsHoldRecovery)) && (
+          {(step < 5 || (step === 5 && paymentRefPhase === 'select-method' && !singlePaymentMethod && !needsHoldRecovery)) && (
             <div className="flex gap-2.5">
               <button
                 type="button"
@@ -1766,7 +1675,7 @@ export default function Book() {
                 </>
               )}
             </button>
-          ) : (
+          ) : step === 5 && paymentRefPhase === 'select-method' && !singlePaymentMethod ? (
             <button
               type="button"
               onClick={() => { setError(null); setPaymentRefPhase('qr') }}
@@ -1785,12 +1694,13 @@ export default function Book() {
                 </>
               )}
             </button>
-          )}
+          ) : null}
               </div>
             </div>
           )}
           {step < 4 ? null : step === 4 ? null : step === 5 && needsHoldRecovery ? null : paymentRefPhase === 'select-method' ? null : paymentRefPhase === 'qr' ? (
             <>
+              {!singlePaymentMethod && (
               <button
                 type="button"
                 onClick={() => {
@@ -1804,6 +1714,7 @@ export default function Book() {
               >
                 ← Change payment method
               </button>
+              )}
               <button
                 type="button"
                 onClick={() => setPaymentRefPhase('reference')}

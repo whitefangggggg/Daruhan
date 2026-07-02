@@ -4,12 +4,15 @@ import { supabase } from '../lib/supabaseClient'
 const AuthContext = createContext(null)
 
 async function loadOrCreateProfile(user) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
+  if (error) {
+    console.error('[auth] profile fetch failed:', error.message)
+  }
   if (data) return data
 
   const fullName =
@@ -18,7 +21,7 @@ async function loadOrCreateProfile(user) {
     user.email?.split('@')[0] ||
     'Player'
 
-  const { data: newProfile } = await supabase
+  const { data: newProfile, error: upsertError } = await supabase
     .from('profiles')
     .upsert({
       id: user.id,
@@ -27,6 +30,11 @@ async function loadOrCreateProfile(user) {
     })
     .select()
     .single()
+
+  if (upsertError) {
+    console.error('[auth] profile upsert failed:', upsertError.message)
+    return null
+  }
 
   return newProfile
 }
@@ -62,11 +70,15 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => applySession(session))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Initial session is handled by getSession above
       if (event === 'INITIAL_SESSION') return
 
       setLoading(true)
-      await applySession(session)
+      try {
+        await applySession(session)
+      } catch (err) {
+        console.error('[auth] session apply failed:', err)
+        setLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()

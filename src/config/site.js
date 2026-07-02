@@ -24,12 +24,12 @@ export const SITE = {
   venue: {
     courtCount: 4,
     maxCourtQuantity: 4,
-    hoursLabel: 'Open 8AM – 5AM',
-    hoursDetail: 'Daily · closed 5AM – 8AM',
+    hoursLabel: 'Open 7AM – 5AM',
+    hoursDetail: 'Daily · closed 5AM – 7AM',
     parkingLabel: 'Parking available',
     cityLine: 'Proper Valladolid, Carcar City, Cebu',
     /** Venue reopens at openHour; closed from closeHour until openHour (overnight). */
-    operatingHours: { openHour: 8, closeHour: 5 },
+    operatingHours: { openHour: 7, closeHour: 5 },
     openingSoon: false,
   },
 
@@ -49,7 +49,7 @@ export const SITE = {
 
   features: {
     openPlay: false,
-    trainer: true,
+    trainer: false,
     multiCourtBooking: true,
   },
 

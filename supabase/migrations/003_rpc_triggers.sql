@@ -230,11 +230,7 @@ BEGIN
   END IF;
 
   IF public.booking_range_has_closed_hours(p_start_hour, p_duration_hours) THEN
-    RAISE EXCEPTION 'INVALID_BOOKING: venue closed 5AM–8AM' USING ERRCODE = '22023';
-  END IF;
-
-  IF COALESCE(p_trainer_hours, 0) > 0 AND COALESCE(p_trainer_heads, 0) < 1 THEN
-    RAISE EXCEPTION 'INVALID_TRAINER' USING ERRCODE = '22023';
+    RAISE EXCEPTION 'INVALID_BOOKING: venue closed 5AM–7AM' USING ERRCODE = '22023';
   END IF;
 
   v_need := GREATEST(1, LEAST(COALESCE(p_court_count, 1), 4));
@@ -247,7 +243,7 @@ BEGIN
     RAISE EXCEPTION 'INVALID_PRICE' USING ERRCODE = '22023';
   END IF;
 
-  v_extras := public.calculate_extras_total(p_paddles, p_balls, p_trainer_hours, p_trainer_heads);
+  v_extras := public.calculate_extras_total(p_paddles, p_balls, 0, 0, p_duration_hours);
   v_extras_share := CASE WHEN v_need > 0 THEN round(v_extras / v_need, 2) ELSE 0 END;
 
   FOREACH v_court_id IN ARRAY p_court_ids LOOP
@@ -349,7 +345,7 @@ BEGIN
   END IF;
 
   IF public.booking_range_has_closed_hours(p_start_hour, p_duration_hours) THEN
-    RAISE EXCEPTION 'INVALID_DURATION: venue closed 5AM–8AM' USING ERRCODE = '22023';
+    RAISE EXCEPTION 'INVALID_DURATION: venue closed 5AM–7AM' USING ERRCODE = '22023';
   END IF;
 
   v_total := public.calculate_court_total(p_start_hour, p_duration_hours);

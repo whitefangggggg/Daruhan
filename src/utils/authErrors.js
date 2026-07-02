@@ -16,6 +16,18 @@ export function formatAuthError(message) {
     return 'Incorrect email or password.'
   }
 
+  if (lower.includes('access_denied') || (lower.includes('oauth') && lower.includes('cancel'))) {
+    return 'Google sign-in was cancelled. Try again when you\'re ready.'
+  }
+
+  if (lower.includes('pkce') || lower.includes('code verifier')) {
+    return 'Google sign-in expired. Go back to the login page and tap Continue with Google again — don\'t refresh the callback URL.'
+  }
+
+  if (lower.includes('provider is not enabled') || lower.includes('unsupported provider')) {
+    return 'Google sign-in is not enabled yet. Ask the site admin to turn on the Google provider in Supabase.'
+  }
+
   if (lower.includes('user already registered') || lower.includes('already been registered')) {
     return 'An account with this email already exists. Sign in instead, or check your inbox for a confirmation link.'
   }

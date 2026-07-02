@@ -17,6 +17,34 @@ export function getMaxDurationForStart(startHour) {
   return 24 - startHour
 }
 
+/**
+ * Max duration from `startHour` that stays on the same calendar day and does not
+ * cross venue closed hours or other blocked hours (e.g. past slots today).
+ */
+export function getMaxBookableDuration(startHour, blockedHours = new Set()) {
+  if (startHour == null || startHour < 0 || startHour > 23) return 0
+  const closed = getVenueClosedHours()
+  let max = 0
+  for (let dur = 1; dur <= 24; dur++) {
+    if (!isValidBookingRange(startHour, dur)) break
+    const range = getOccupiedHours(startHour, dur)
+    if (range.length !== dur) break
+    if (range.some(h => closed.has(h) || blockedHours.has(h))) break
+    max = dur
+  }
+  return max
+}
+
+/** Longest duration that fits at least one start hour on this date. */
+export function getMaxDurationForDate(blockedHours = new Set()) {
+  let max = 0
+  for (let start = 0; start < 24; start++) {
+    if (blockedHours.has(start)) continue
+    max = Math.max(max, getMaxBookableDuration(start, blockedHours))
+  }
+  return Math.max(1, max)
+}
+
 /** True when start + duration fits on one calendar day (matches SQL int4range on 0–23). */
 export function isValidBookingRange(startHour, durationHours) {
   if (startHour == null || durationHours == null) return false
@@ -38,7 +66,7 @@ export function getPastHoursForDate(dateStr, now = new Date()) {
   return past
 }
 
-/** Hours when the venue is closed (e.g. 5AM–8AM for 8AM–5AM operating hours). */
+/** Hours when the venue is closed (e.g. 5AM–7AM for 7AM–5AM operating hours). */
 export function getVenueClosedHours() {
   const { openHour = 0, closeHour = 0 } = SITE.venue.operatingHours ?? {}
   const closed = new Set()
@@ -64,7 +92,8 @@ export function canStartOnAnyCourt(startHour, durationHours, perCourtOccupied, p
   if (!isValidBookingRange(startHour, durationHours)) return false
   const range = getOccupiedHours(startHour, durationHours)
   if (range.length !== durationHours) return false
-  if (range.some(h => pastHours.has(h))) return false
+  const closed = getVenueClosedHours()
+  if (range.some(h => pastHours.has(h) || closed.has(h))) return false
   if (!perCourtOccupied.length) return false
   return perCourtOccupied.some(occupied => range.every(h => !occupied.has(h)))
 }
@@ -74,7 +103,8 @@ export function canStartOnAllCourts(startHour, durationHours, perCourtOccupied, 
   if (!isValidBookingRange(startHour, durationHours)) return false
   const range = getOccupiedHours(startHour, durationHours)
   if (range.length !== durationHours) return false
-  if (range.some(h => pastHours.has(h))) return false
+  const closed = getVenueClosedHours()
+  if (range.some(h => pastHours.has(h) || closed.has(h))) return false
   if (!perCourtOccupied.length) return false
   return perCourtOccupied.every(occupied => range.every(h => !occupied.has(h)))
 }
@@ -84,7 +114,8 @@ export function countCourtsFreeAtSlot(startHour, durationHours, perCourtOccupied
   if (!isValidBookingRange(startHour, durationHours)) return 0
   const range = getOccupiedHours(startHour, durationHours)
   if (range.length !== durationHours) return 0
-  if (range.some(h => pastHours.has(h))) return 0
+  const closed = getVenueClosedHours()
+  if (range.some(h => pastHours.has(h) || closed.has(h))) return 0
   if (!perCourtOccupied.length) return 0
   return perCourtOccupied.filter(occupied => range.every(h => !occupied.has(h))).length
 }
