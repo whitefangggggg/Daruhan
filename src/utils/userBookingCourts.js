@@ -30,15 +30,15 @@ export function getBookedCourtCount(courtQuantity) {
   return normalizeCourtQuantity(courtQuantity)
 }
 
-export function formatCourtSelectionLabel(courts, courtQuantity, assignedHolds = []) {
+export function formatCourtSelectionLabel(courts, courtQuantity, assignedHolds = [], unitLabel = 'court') {
   if (assignedHolds.length > 0) {
     return assignedHolds
-      .map(row => courts.find(c => c.id === row.court_id)?.name ?? 'Court')
+      .map(row => courts.find(c => c.id === row.court_id)?.name ?? unitLabel)
       .join(', ')
   }
   const n = normalizeCourtQuantity(courtQuantity, courts.length)
-  if (n === 1) return '1 court (auto-assigned)'
-  return `${n} courts (auto-assigned)`
+  if (n === 1) return `1 ${unitLabel} (auto-assigned)`
+  return `${n} ${unitLabel}s (auto-assigned)`
 }
 
 export function maxSelectableCourts(activeCourtCount) {

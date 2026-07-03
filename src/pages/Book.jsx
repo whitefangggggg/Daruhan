@@ -26,7 +26,7 @@ import {
 } from '../utils/bookingDraft'
 import { PADDLE_RATE, BALL_RATE, extrasRentalTotal } from '../utils/parseBookingNotes'
 import { formatHoldError } from '../utils/bookingHoldErrors'
-import { getBookingEndHour, getMaxBookableDuration, getMaxDurationForDate, getBlockedHoursForDate } from '../utils/bookingHours'
+import { getBookingEndHour, getMaxBookableDuration, getMaxDurationForDate, getBlockedHoursForDate, getPastHoursForDate } from '../utils/bookingHours'
 import {
   resolveBookingCourtIds,
   getBookedCourtCount,
@@ -265,6 +265,7 @@ export default function Book() {
 
   const { perCourtOccupied, loading: availLoading, error: availError } = useAvailability(courtIdsForBooking, selectedDate)
 
+  const pastHours = useMemo(() => getPastHoursForDate(selectedDate), [selectedDate])
   const blockedHours = useMemo(() => getBlockedHoursForDate(selectedDate), [selectedDate])
 
   const slotStates = useMemo(
@@ -272,16 +273,17 @@ export default function Book() {
       duration,
       numCourts: courtQuantity,
       perCourtOccupied,
-      pastHours: blockedHours,
+      blockedHours,
+      pastHours,
     }),
-    [duration, courtQuantity, perCourtOccupied, blockedHours],
+    [duration, courtQuantity, perCourtOccupied, blockedHours, pastHours],
   )
 
   const showDowngradeHint = useMemo(
     () => !downgradeHintDismissed && shouldShowCourtDowngradeHint({
       duration,
       perCourtOccupied,
-      pastHours: blockedHours,
+      blockedHours,
       numCourts: courtQuantity,
     }),
     [downgradeHintDismissed, duration, perCourtOccupied, blockedHours, courtQuantity],
@@ -579,6 +581,7 @@ export default function Book() {
       .from('courts')
       .select('*')
       .eq('is_active', true)
+      .eq('type', 'court')
       .then(({ data, error }) => {
         if (cancelled) return
         if (error) {
@@ -1078,7 +1081,7 @@ export default function Book() {
       {error && (
         <div
           ref={errorBannerRef}
-          className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 rounded-xl p-3 mb-6 text-sm"
+          className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 rounded-xl p-3 mb-6 text-sm"
         >
           <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
           {error}
@@ -1251,7 +1254,7 @@ export default function Book() {
                     </p>
                   )}
                   {!courtsLoading && courtsError && (
-                    <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700 mb-3">
+                    <div className="rounded-xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-400 mb-3">
                       {courtsError}
                     </div>
                   )}
@@ -1261,10 +1264,10 @@ export default function Book() {
                       Loading courts…
                     </div>
                   ) : courts.length === 0 ? (
-                    <div className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+                    <div className="text-sm text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-xl px-3 py-2.5">
                       <p>No active courts are available right now. Please try again later or contact support.</p>
                       {import.meta.env.DEV && !courtsError && (
-                        <p className="text-xs mt-1.5 text-amber-700/90">
+                        <p className="text-xs mt-1.5 text-amber-700/90 dark:text-amber-400/90">
                           Dev hint: if the <code className="font-mono">courts</code> table is empty in Supabase, run <code className="font-mono">supabase/seed.sql</code> in the SQL Editor (migration 004 only updates hours).
                         </p>
                       )}
@@ -1384,9 +1387,9 @@ export default function Book() {
               {needsHoldRecovery ? (
                 <div className="card p-5 space-y-4">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 5 · Payment</p>
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2">
-                    <p className="font-semibold text-amber-950">No active slot hold</p>
-                    <p className="text-sm text-amber-900 leading-relaxed">
+                  <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-2">
+                    <p className="font-semibold text-amber-950 dark:text-amber-200">No active slot hold</p>
+                    <p className="text-sm text-amber-900 dark:text-amber-400 leading-relaxed">
                       Your court reservation isn&apos;t on hold anymore — it may have expired after 30 minutes,
                       or the page was refreshed before payment finished. Go back to review and reserve your slot again.
                     </p>
@@ -1451,8 +1454,8 @@ export default function Book() {
                           onClick={() => setSelectedPaymentMethodId(method.id)}
                           className={`relative rounded-2xl border-2 p-5 min-h-[88px] flex items-center justify-center transition-all ${
                             selectedPaymentMethodId === method.id
-                              ? 'border-brand-gold-500 bg-brand-gold-50 shadow-sm'
-                              : 'border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-gold-200'
+                              ? 'border-brand-gold-500 bg-brand-gold-50 dark:bg-brand-navy-900/40 shadow-sm'
+                              : 'border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-gold-200 dark:hover:border-brand-gold-700'
                           }`}
                         >
                           <PaymentMethodBrand name={method.name} />
@@ -1490,7 +1493,7 @@ export default function Book() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 p-6">
+                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/60 p-6">
                     <PaymentQrImage
                       method={selectedMethod}
                       qrSrc={paymentQrSrc}

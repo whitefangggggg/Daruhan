@@ -14,10 +14,10 @@ function GuideTopicContent({ topic, category, variant }) {
       <div className={`rounded-2xl border overflow-hidden ${
         isAdmin
           ? 'admin-card-flat border-brand-gold-200/80'
-          : 'bg-white/90 border-brand-gold-200 dark:border-slate-700 shadow-sm'
+          : 'bg-white/90 dark:bg-slate-800/90 border-brand-gold-200 dark:border-slate-700 shadow-sm'
       }`}>
-        <div className={`px-5 py-5 border-b ${isAdmin ? 'border-brand-gold-200/60 bg-brand-gold-50/30' : 'border-brand-gold-100 bg-gradient-to-r from-brand-gold-50/50 to-white dark:from-slate-800 dark:to-slate-900'}`}>
-          <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isAdmin ? 'text-brand-gold-600/70' : 'text-brand-gold-500/70'}`}>
+        <div className={`px-5 py-5 border-b ${isAdmin ? 'border-brand-gold-200/60 dark:border-brand-navy-700/50 bg-brand-gold-50/30 dark:bg-brand-navy-900/20' : 'border-brand-gold-100 dark:border-slate-700 bg-gradient-to-r from-brand-gold-50/50 to-white dark:from-slate-800 dark:to-slate-900'}`}>
+          <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isAdmin ? 'text-brand-gold-600/70 dark:text-brand-gold-400/80' : 'text-brand-gold-500/70 dark:text-brand-gold-400/80'}`}>
             {category.title}
           </p>
           <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -32,8 +32,8 @@ function GuideTopicContent({ topic, category, variant }) {
                 to={topic.path}
                 className={`inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 transition-colors ${
                   isAdmin
-                    ? 'text-brand-gold-700 bg-brand-gold-100/80 hover:bg-brand-gold-100'
-                    : 'text-brand-gold-600 bg-brand-gold-50 hover:bg-brand-gold-100'
+                    ? 'text-brand-gold-700 dark:text-brand-gold-400 bg-brand-gold-100/80 dark:bg-brand-navy-900/30 hover:bg-brand-gold-100 dark:hover:bg-brand-navy-900/50'
+                    : 'text-brand-gold-600 dark:text-brand-gold-400 bg-brand-gold-50 dark:bg-brand-navy-900/30 hover:bg-brand-gold-100 dark:hover:bg-brand-navy-900/50'
                 }`}
               >
                 Open page
@@ -51,7 +51,9 @@ function GuideTopicContent({ topic, category, variant }) {
                 <li key={i} className="flex gap-3 text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                   <span
                     className={`flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-extrabold ${
-                      isAdmin ? 'bg-brand-gold-100 text-brand-navy-800' : 'bg-brand-gold-100 text-brand-navy-900'
+                      isAdmin
+                        ? 'bg-brand-gold-100 dark:bg-brand-navy-900/40 text-brand-navy-800 dark:text-brand-gold-300'
+                        : 'bg-brand-gold-100 dark:bg-brand-navy-900/40 text-brand-navy-900 dark:text-brand-gold-300'
                     }`}
                   >
                     {i + 1}
@@ -63,14 +65,14 @@ function GuideTopicContent({ topic, category, variant }) {
           </div>
 
           {topic.tips?.length > 0 && (
-            <div className={`rounded-xl px-4 py-3 ${isAdmin ? 'bg-amber-50/80 border border-amber-100' : 'bg-amber-50/90 border border-amber-100/80'}`}>
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-800 mb-2">
+            <div className={`rounded-xl px-4 py-3 border ${isAdmin ? 'bg-amber-50/80 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/40' : 'bg-amber-50/90 dark:bg-amber-900/20 border-amber-100/80 dark:border-amber-900/40'}`}>
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 mb-2">
                 <Lightbulb size={12} />
                 Tips
               </p>
               <ul className="space-y-1.5">
                 {topic.tips.map((tip, i) => (
-                  <li key={i} className="text-sm text-amber-950/80 leading-relaxed pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-amber-500">
+                  <li key={i} className="text-sm text-amber-950/80 dark:text-amber-200/80 leading-relaxed pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-amber-500">
                     {tip}
                   </li>
                 ))}
@@ -90,10 +92,10 @@ function GuideCategoryOverview({ category, variant, onSelectTopic }) {
     <div>
       <div className={`rounded-2xl px-6 py-5 border mb-5 ${
         isAdmin
-          ? 'admin-card-flat border-brand-gold-200/60 bg-gradient-to-br from-brand-gold-50/50 to-white'
-          : 'bg-gradient-to-br from-brand-gold-50/80 to-white border-brand-gold-200 shadow-sm'
+          ? 'admin-card-flat border-brand-gold-200/60 bg-gradient-to-br from-brand-gold-50/50 to-white dark:from-brand-navy-900/30 dark:to-slate-800'
+          : 'bg-gradient-to-br from-brand-gold-50/80 to-white dark:from-brand-navy-900/30 dark:to-slate-800 border-brand-gold-200 dark:border-slate-700 shadow-sm'
       }`}>
-        <h2 className={`text-xl lg:text-2xl font-extrabold tracking-tight mb-2 ${isAdmin ? 'text-brand-navy-900 admin-display' : 'text-brand-navy-900'}`}>
+        <h2 className={`text-xl lg:text-2xl font-extrabold tracking-tight mb-2 text-brand-navy-900 dark:text-brand-gold-100 ${isAdmin ? 'admin-display' : ''}`}>
           {category.title}
         </h2>
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{category.summary}</p>
@@ -108,11 +110,11 @@ function GuideCategoryOverview({ category, variant, onSelectTopic }) {
             onClick={() => onSelectTopic(topic.id)}
             className={`text-left rounded-xl border px-4 py-3.5 transition-all group ${
               isAdmin
-                ? 'admin-card-flat border-brand-gold-200/80 hover:border-brand-gold-200 hover:bg-brand-gold-50/40'
-                : 'bg-white/90 border-brand-gold-200 dark:border-slate-700 hover:border-brand-gold-300 hover:bg-brand-gold-50/50 shadow-sm'
+                ? 'admin-card-flat border-brand-gold-200/80 hover:border-brand-gold-200 dark:hover:border-brand-gold-800/60 hover:bg-brand-gold-50/40 dark:hover:bg-brand-navy-900/20'
+                : 'bg-white/90 dark:bg-slate-800/90 border-brand-gold-200 dark:border-slate-700 hover:border-brand-gold-300 dark:hover:border-brand-gold-700 hover:bg-brand-gold-50/50 dark:hover:bg-brand-navy-900/20 shadow-sm'
             }`}
           >
-            <p className={`text-sm font-bold text-gray-900 dark:text-white ${isAdmin ? 'group-hover:text-brand-navy-900' : 'group-hover:text-brand-navy-900'}`}>
+            <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-brand-navy-900 dark:group-hover:text-brand-gold-300">
               {topic.title}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed line-clamp-2">{topic.summary}</p>
@@ -151,16 +153,12 @@ function GuideToc({
                 onClick={() => onCategoryClick(category.id)}
                 className={`block w-full text-left px-2 py-1.5 text-sm font-extrabold tracking-tight transition-colors rounded-lg ${
                   showCategoryHighlight
-                    ? isAdmin
-                      ? 'text-brand-navy-900 bg-brand-gold-100/80'
-                      : 'text-brand-navy-900 bg-brand-gold-100/80'
+                    ? 'text-brand-navy-900 dark:text-brand-gold-200 bg-brand-gold-100/80 dark:bg-brand-navy-900/40'
                     : isCategoryActive
-                      ? isAdmin
-                        ? 'text-brand-navy-900 bg-brand-gold-50/80'
-                        : 'text-brand-navy-900 bg-brand-gold-50/80'
+                      ? 'text-brand-navy-900 dark:text-brand-gold-200 bg-brand-gold-50/80 dark:bg-brand-navy-900/25'
                       : isAdmin
-                        ? 'text-brand-navy-900 hover:text-brand-gold-700 hover:bg-brand-gold-50/50'
-                        : 'text-brand-navy-900 hover:text-brand-gold-600 hover:bg-brand-gold-50/50'
+                        ? 'text-brand-navy-900 dark:text-gray-200 hover:text-brand-gold-700 dark:hover:text-brand-gold-400 hover:bg-brand-gold-50/50 dark:hover:bg-brand-navy-900/20'
+                        : 'text-brand-navy-900 dark:text-gray-200 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 hover:bg-brand-gold-50/50 dark:hover:bg-brand-navy-900/20'
                 }`}
               >
                 {category.title}
@@ -176,10 +174,8 @@ function GuideToc({
                         onClick={() => onTopicClick(topic.id)}
                         className={`block w-full text-left pl-2.5 pr-2 py-1.5 rounded-md text-xs leading-snug transition-all duration-200 ${
                           isActive
-                            ? isAdmin
-                              ? 'bg-brand-gold-100 text-brand-navy-900 font-semibold border-l-2 border-brand-gold-500 -ml-[2px] pl-3'
-                              : 'bg-brand-gold-100 text-brand-navy-900 font-semibold border-l-2 border-brand-gold-500 -ml-[2px] pl-3'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-slate-800/50 hover:text-gray-800 dark:text-gray-100 font-medium'
+                            ? 'bg-brand-gold-100 dark:bg-brand-navy-900/40 text-brand-navy-900 dark:text-brand-gold-200 font-semibold border-l-2 border-brand-gold-500 -ml-[2px] pl-3'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-gray-800 dark:hover:text-gray-100 font-medium'
                         }`}
                       >
                         {topic.title}
@@ -262,8 +258,8 @@ export default function GuideLayout({
 
   const panelClass = `min-w-0 rounded-2xl border admin-scroll ${
     isAdmin
-      ? 'admin-card-flat border-brand-gold-200/60 bg-white/50'
-      : 'bg-white/60 border-brand-gold-200/80 dark:border-slate-700'
+      ? 'admin-card-flat border-brand-gold-200/60 bg-white/50 dark:bg-slate-800/50'
+      : 'bg-white/60 dark:bg-slate-800/60 border-brand-gold-200/80 dark:border-slate-700'
   } lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:overscroll-contain`
 
   return (
@@ -278,7 +274,9 @@ export default function GuideLayout({
           <Link
             to={backLink}
             className={`inline-flex items-center gap-1 text-sm font-semibold mb-4 transition-colors ${
-              isAdmin ? 'text-brand-gold-700 hover:text-brand-navy-900' : 'text-brand-gold-600 hover:text-brand-navy-900'
+              isAdmin
+                ? 'text-brand-gold-700 dark:text-brand-gold-400 hover:text-brand-navy-900 dark:hover:text-brand-gold-200'
+                : 'text-brand-gold-600 dark:text-brand-gold-400 hover:text-brand-navy-900 dark:hover:text-brand-gold-200'
             }`}
           >
             ← {backLabel}
@@ -309,7 +307,7 @@ export default function GuideLayout({
       </motion.header>
 
       <div className={`lg:hidden mb-5 rounded-2xl border p-4 max-h-[min(380px,50vh)] admin-scroll ${
-        isAdmin ? 'admin-card-flat border-brand-gold-200/80' : 'bg-white/90 border-brand-gold-200 dark:border-slate-700 shadow-sm'
+        isAdmin ? 'admin-card-flat border-brand-gold-200/80' : 'bg-white/90 dark:bg-slate-800/90 border-brand-gold-200 dark:border-slate-700 shadow-sm'
       }`}>
         <GuideToc {...tocProps} />
       </div>

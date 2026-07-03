@@ -106,7 +106,7 @@ export default function AdminDashboard() {
     await refreshBookingStatuses()
     const today = format(new Date(), 'yyyy-MM-dd')
     const [statsRes, todayRes] = await Promise.all([
-      supabase.from('bookings').select('status, total_price, date, duration_hours'),
+      supabase.from('bookings').select('status, total_price, date, duration_hours, courts(type)'),
       supabase
         .from('bookings')
         .select('*, profiles(full_name), courts(name)')
@@ -124,10 +124,10 @@ export default function AdminDashboard() {
     const today = format(new Date(), 'yyyy-MM-dd')
 
     const [statsRes, pendingRes, todayRes] = await Promise.all([
-      supabase.from('bookings').select('status, total_price, date, duration_hours'),
+      supabase.from('bookings').select('status, total_price, date, duration_hours, courts(type)'),
       supabase
         .from('bookings')
-        .select('*, profiles(full_name, phone), courts(name), payment_methods(name, account_name)')
+        .select('*, profiles(full_name, phone), courts(name, type), payment_methods(name, account_name)')
         .eq('status', 'processing')
         .order('date', { ascending: true }),
       supabase
@@ -170,11 +170,14 @@ export default function AdminDashboard() {
 
     const active = statData.filter(b => ['confirmed', 'completed'].includes(b.status))
     const totalRevenue = active.reduce((s, b) => s + Number(b.total_price), 0)
+    const isKtvRow = b => b.courts?.type === 'ktv'
 
     const monthRows = active.filter(b => b.date >= monthStart && b.date <= monthEnd)
     const monthRevenue = monthRows.reduce((s, b) => s + Number(b.total_price), 0)
     const monthHours = monthRows.reduce((s, b) => s + (b.duration_hours ?? 0), 0)
     const monthCount = monthRows.length
+    const monthCourtRevenue = monthRows.filter(b => !isKtvRow(b)).reduce((s, b) => s + Number(b.total_price), 0)
+    const monthKtvRevenue = monthRows.filter(isKtvRow).reduce((s, b) => s + Number(b.total_price), 0)
 
     const prevRows = active.filter(b => b.date >= prevMonthStart && b.date <= prevMonthEnd)
     const prevRevenue = prevRows.reduce((s, b) => s + Number(b.total_price), 0)
@@ -190,6 +193,8 @@ export default function AdminDashboard() {
     return {
       totalRevenue,
       monthRevenue,
+      monthCourtRevenue,
+      monthKtvRevenue,
       revenueChange,
       monthCount,
       countChange,
@@ -305,7 +310,7 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={14} className="text-brand-gold-200" />
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-gold-100">
-                  {format(selectedMonth, 'MMMM yyyy')} · Court Bookings
+                  {format(selectedMonth, 'MMMM yyyy')} · All Bookings
                 </p>
               </div>
               <p className="admin-display text-[2.5rem] lg:text-[3.25rem] leading-none tabular-nums">
@@ -315,7 +320,17 @@ export default function AdminDashboard() {
                 <TrendChip change={kpis.revenueChange} light />
                 <span className="text-[12px] text-brand-gold-50/80">
                   {kpis.monthCount} booking{kpis.monthCount !== 1 ? 's' : ''} ·{' '}
-                  {kpis.monthHours}h of court time
+                  {kpis.monthHours}h total
+                </span>
+              </div>
+              <div className="flex items-center gap-4 mt-3 flex-wrap text-[12px] text-brand-gold-50/80">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                  🏓 Court: <span className="font-semibold text-white">₱{kpis.monthCourtRevenue.toLocaleString()}</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                  🎤 KTV: <span className="font-semibold text-white">₱{kpis.monthKtvRevenue.toLocaleString()}</span>
                 </span>
               </div>
             </div>
@@ -354,7 +369,7 @@ export default function AdminDashboard() {
             />
             <StatTile
               icon={Clock}
-              label="Court hours"
+              label="Booked hours"
               value={`${kpis.monthHours}h`}
               sub="Confirmed + completed"
               accent={{ bg: 'rgba(168, 85, 247, 0.12)', fg: '#9333ea' }}
@@ -490,7 +505,7 @@ export default function AdminDashboard() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
                             <span className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-1.5">
-                              <AppEmoji name="court" size={15} />
+                              <AppEmoji name={b.courts?.type === 'ktv' ? 'microphone' : 'court'} size={15} />
                               {b.courts?.name}
                             </span>
                             <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
@@ -520,7 +535,7 @@ export default function AdminDashboard() {
                         <button
                           type="button"
                           onClick={() => setRejectTarget(b)}
-                          className="text-[12px] text-red-500 hover:bg-red-50 px-3.5 py-2 rounded-lg font-semibold transition-colors inline-flex items-center gap-1.5"
+                          className="text-[12px] text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3.5 py-2 rounded-lg font-semibold transition-colors inline-flex items-center gap-1.5"
                         >
                           <X size={13} /> Reject
                         </button>
@@ -560,7 +575,7 @@ export default function AdminDashboard() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-1.5">
-                            <AppEmoji name="court" size={15} />
+                            <AppEmoji name={b.courts?.type === 'ktv' ? 'microphone' : 'court'} size={15} />
                             {b.courts?.name}
                           </span>
                           <span className="text-[11px] font-semibold text-orange-900 dark:text-orange-400 bg-orange-100/90 dark:bg-orange-900/20 border border-orange-200/80 dark:border-orange-900/40 px-2 py-0.5 rounded-full">

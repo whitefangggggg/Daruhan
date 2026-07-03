@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   getRateForHour,
   getThemeForHour,
@@ -9,10 +9,11 @@ import {
   getOccupiedHours,
   isBookingRangeFree,
   getBookingEndHour,
+  getOperatingDisplayHours,
+  getMaxBookableDuration,
+  getVenueClosedHours,
 } from '../utils/bookingHours'
 import { Check } from '../components/ui/Icon'
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 function formatHourLabel(h) {
   if (h === 0 || h === 24) return '12MN'
@@ -61,20 +62,33 @@ function SlotDiv({ compact, children, className = '' }) {
 export default function TimeSlotPicker({
   unavailableHours,
   pastHours = new Set(),
+  blockedHours,
   canStartAt: canStartAtOverride,
   selectedHour,
   duration,
   onSelectHour,
   gridClassName,
   compact = false,
+  operatingHours,
+  getRate = getRateForHour,
+  getTheme = getThemeForHour,
+  rateBrackets = RATE_BRACKETS,
 }) {
   const [hoverHour, setHoverHour] = useState(null)
+  const HOURS = useMemo(() => getOperatingDisplayHours(operatingHours), [operatingHours])
   const resolvedGridClass = gridClassName ?? (compact ? 'grid-cols-3 sm:grid-cols-4' : 'grid-cols-4 sm:grid-cols-6')
+  const resolvedBlockedHours = useMemo(() => {
+    if (blockedHours) return blockedHours
+    const merged = new Set(getVenueClosedHours(operatingHours))
+    for (const h of pastHours) merged.add(h)
+    return merged
+  }, [blockedHours, pastHours, operatingHours])
 
   const canStartAt = (startH) => (
     canStartAtOverride
       ? canStartAtOverride(startH, duration)
-      : isBookingRangeFree(startH, duration, unavailableHours)
+      : getMaxBookableDuration(startH, resolvedBlockedHours, operatingHours) >= duration
+        && isBookingRangeFree(startH, duration, unavailableHours)
   )
 
   function isInRange(startH, h) {
@@ -85,7 +99,7 @@ export default function TimeSlotPicker({
   useEffect(() => {
     if (selectedHour == null) return
     if (!canStartAt(selectedHour)) onSelectHour(null)
-  }, [selectedHour, duration, unavailableHours, onSelectHour])
+  }, [selectedHour, duration, unavailableHours, resolvedBlockedHours, onSelectHour, canStartAtOverride])
 
   const activePreview = hoverHour != null && canStartAt(hoverHour) ? hoverHour : selectedHour
   const previewValid  = activePreview != null && canStartAt(activePreview)
@@ -98,8 +112,8 @@ export default function TimeSlotPicker({
           <LegendSwatch className="slot-booked rounded" />
           Booked
         </span>
-        {!compact && RATE_BRACKETS.map(row => {
-          const theme = RATE_BRACKET_THEMES[row.themeId]
+        {!compact && rateBrackets.map(row => {
+          const theme = row.theme ?? RATE_BRACKET_THEMES[row.themeId]
           return (
             <span key={row.id} className="flex items-center gap-1">
               <LegendSwatch className={`${theme.bg} border-2 ${theme.border}`} />
@@ -128,8 +142,8 @@ export default function TimeSlotPicker({
           const isStart    = h === selectedHour
           const isHoverStart = h === hoverHour && canStartAt(hoverHour)
           const validStart = canStartAt(h)
-          const theme      = getThemeForHour(h)
-          const rate       = getRateForHour(h)
+          const theme      = getTheme(h)
+          const rate       = getRate(h)
 
           if (booked) {
             return (
@@ -184,13 +198,18 @@ export default function TimeSlotPicker({
           }
 
           if (!validStart) {
+            const wontFitDuration = getMaxBookableDuration(h, resolvedBlockedHours, operatingHours) < duration
             return (
               <SlotCell
                 key={h}
                 compact={compact}
                 disabled
                 className="slot-wont-fit cursor-not-allowed"
-                title={`A ${duration}h booking here would overlap a booked slot`}
+                title={
+                  wontFitDuration
+                    ? `A ${duration}h booking does not fit within operating hours from ${formatHourLabel(h)}`
+                    : `A ${duration}h booking here would overlap a booked slot`
+                }
               >
                 <span>{formatHourLabel(h)}</span>
                 <span className="text-[9px] mt-0.5 uppercase tracking-wide">Won&apos;t fit</span>

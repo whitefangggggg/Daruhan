@@ -113,10 +113,10 @@ export default function Navbar() {
 
   const isLanding = location.pathname === '/'
   const isLoginPage = location.pathname === '/login'
-  const isPublicPage = isLanding || isLoginPage
-  const darkNav = (isLanding || isLoginPage) && !user
-  const activeTheme = isPublicPage && !isLanding && !isLoginPage ? 'light' : theme
-  const showThemeToggle = !isPublicPage
+  // Landing keeps its fixed navy navbar for guests; every other page (incl. Login) follows the toggle.
+  const darkNav = isLanding && !user
+  const activeTheme = isLanding ? 'light' : theme
+  const showThemeToggle = !isLanding
 
   useEffect(() => {
     function handleClick(e) {
@@ -191,7 +191,7 @@ export default function Navbar() {
       ? 'text-sm font-semibold text-brand-gold-200 px-3 py-2 rounded-lg bg-white/10'
       : 'text-sm font-semibold text-white/85 hover:text-white px-3 py-2 rounded-lg hover:bg-white/10 transition-colors'
     : isLoginPage
-      ? 'text-sm font-semibold text-brand-navy-900 px-3 py-2 rounded-lg bg-brand-gold-50'
+      ? 'text-sm font-semibold text-brand-navy-900 dark:text-brand-gold-400 px-3 py-2 rounded-lg bg-brand-gold-50 dark:bg-brand-navy-900/30'
       : 'text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-brand-gold-600 px-3 py-2 rounded-lg hover:bg-brand-gold-50/60 transition-colors'
 
   const menuIconClass = darkNav
@@ -309,6 +309,16 @@ export default function Navbar() {
             </>
           ) : (
             <>
+              {showThemeToggle && (
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className={menuIconClass}
+                  aria-label="Toggle theme"
+                >
+                  {activeTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+              )}
               <Link to="/login" className={signInClass}>
                 Sign In
               </Link>
@@ -438,6 +448,13 @@ export default function Navbar() {
               >
                 Rates
               </button>
+              {showThemeToggle && (
+                <MobileThemeToggle
+                  activeTheme={activeTheme}
+                  onToggle={toggleTheme}
+                  darkNav={darkNav}
+                />
+              )}
               <div className="flex flex-col gap-2 mt-3 px-1">
                 <Link
                   to="/book"

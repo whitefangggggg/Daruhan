@@ -36,7 +36,11 @@ export default function AdminBookingCardDetails({ booking }) {
     payment_sender_name,
     payment_sender_platform,
     payment_methods,
+    courts,
   } = booking
+
+  const isKtv = courts?.type === 'ktv'
+  const rentalLabel = isKtv ? 'Room rental' : 'Court rental'
 
   const meta = getAdminBookingMeta(booking)
   const { bookerName, paddles, balls, trainerHours, trainerHeads, extrasTotal, userNotes } = parseBookingNotes(notes, {
@@ -100,7 +104,7 @@ export default function AdminBookingCardDetails({ booking }) {
       <div className="bg-gray-50/80 dark:bg-slate-800/60 border border-gray-100 dark:border-slate-700/80 rounded-lg p-3 space-y-1.5 !mt-3">
           <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">Price Breakdown</p>
           <div className="flex justify-between text-[11px] text-gray-600 dark:text-gray-300">
-            <span>Court rental ({duration_hours}h)</span>
+            <span>{rentalLabel} ({duration_hours}h)</span>
             <span className="font-semibold text-gray-900 dark:text-white">
               ₱{(booking.total_price - extrasTotal).toLocaleString()}
             </span>

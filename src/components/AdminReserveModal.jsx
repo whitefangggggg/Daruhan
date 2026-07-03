@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabaseClient'
 import TimeSlotPicker from './TimeSlotPicker'
 import { useAvailability } from '../hooks/useAvailability'
-import { calculateTotal } from '../lib/pricing'
-import { canStartOnAllCourts, getHoursFullyOccupied, getMaxDurationForStart } from '../utils/bookingHours'
+import { calculateTotal, calculateKtvTotal, getKtvRateForHour, getKtvThemeForHour, KTV_RATE_BRACKETS } from '../lib/pricing'
+import { canStartOnAllCourts, getHoursFullyOccupied, getMaxBookableDuration, getMaxDurationForDate } from '../utils/bookingHours'
+import { SITE } from '../config/site'
 import { StatusMessage, X } from './ui/Icon'
 import BookingConfirmModal from './BookingConfirmModal'
 import { CalendarPlus, Minus, Plus, Repeat } from 'lucide-react'
@@ -109,7 +110,7 @@ function PaymentChoice({ value, onChange }) {
         className={`flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border-2 text-sm font-semibold transition-all ${
           value === false
             ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
-            : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-amber-300 hover:bg-amber-50/60'
+            : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-amber-300 dark:hover:border-amber-700 hover:bg-amber-50/60 dark:hover:bg-amber-900/20'
         }`}
       >
         <span className="text-xl leading-none">{value === false ? '⏳' : '🕐'}</span>
@@ -125,7 +126,17 @@ export default function AdminReserveModal({
   selectedDate,
   courts = [],
   onSuccess,
+  venueType = 'court',
 }) {
+  const isKtv = venueType === 'ktv'
+  const unitLabel = isKtv ? 'room' : 'court'
+  const unitLabelCap = isKtv ? 'Room' : 'Court'
+  const unitIcon = isKtv ? '🎤' : '🏓'
+  const operatingHours = isKtv ? SITE.ktv.operatingHours : SITE.venue.operatingHours
+  const priceForRange = useCallback(
+    (start, dur) => (isKtv ? calculateKtvTotal(dur) : calculateTotal(start, dur)),
+    [isKtv],
+  )
   const [bookerName, setBookerName]     = useState('')
   const [selectedCourtIds, setSelectedCourtIds] = useState([])
   const [startHour, setStartHour]       = useState(null)
@@ -158,9 +169,9 @@ export default function AdminReserveModal({
   // Clamp duration when a late start time limits how long the block can run
   useEffect(() => {
     if (startHour == null) return
-    const max = getMaxDurationForStart(startHour)
-    if (durationHours > max) setDurationHours(max)
-  }, [startHour, durationHours])
+    const max = getMaxBookableDuration(startHour, blockedHours, operatingHours)
+    if (durationHours > max) setDurationHours(Math.max(1, max))
+  }, [startHour, durationHours, blockedHours, operatingHours])
 
   // Reset on open
   useEffect(() => {
@@ -189,8 +200,9 @@ export default function AdminReserveModal({
   const {
     perCourtOccupied,
     pastHours,
+    blockedHours,
     loading: availabilityLoading,
-  } = useAvailability(courtIdsForAvail, open ? selectedDate : null)
+  } = useAvailability(courtIdsForAvail, open ? selectedDate : null, operatingHours)
 
   const availabilityReady = courtIdsForAvail.length > 0
     && perCourtOccupied.length === courtIdsForAvail.length
@@ -202,17 +214,19 @@ export default function AdminReserveModal({
 
   const canStartAt = useCallback((hour, dur) => {
     if (!availabilityReady) return false
-    return canStartOnAllCourts(hour, dur, perCourtOccupied, pastHours)
-  }, [perCourtOccupied, pastHours, availabilityReady])
+    return canStartOnAllCourts(hour, dur, perCourtOccupied, blockedHours, operatingHours)
+  }, [perCourtOccupied, blockedHours, availabilityReady, operatingHours])
 
   // Derived
-  const pricePerCourt = startHour != null ? calculateTotal(startHour, durationHours) : 0
+  const pricePerCourt = startHour != null ? priceForRange(startHour, durationHours) : 0
   const dateCount     = countReservationDates(selectedDate, endDate, repeatWeekly)
   const totalSlots    = dateCount * selectedCourtIds.length
   const totalRevenue  = pricePerCourt * totalSlots
   const weekdayLabel  = format(parseISO(selectedDate), 'EEEE')
   const dateLabel     = format(parseISO(selectedDate), 'EEEE, MMMM d, yyyy')
-  const maxDuration   = startHour != null ? getMaxDurationForStart(startHour) : 24
+  const maxDuration = startHour != null
+    ? getMaxBookableDuration(startHour, blockedHours, operatingHours)
+    : getMaxDurationForDate(blockedHours, operatingHours)
 
   function toggleCourt(id) {
     setSelectedCourtIds(prev => {
@@ -325,7 +339,7 @@ export default function AdminReserveModal({
         <div className="flex items-center justify-between gap-4 px-5 lg:px-8 pt-5 pb-4 flex-shrink-0 border-b border-gray-100 dark:border-slate-700">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold-600 mb-0.5">
-              Admin · New Reservation
+              Admin · New {isKtv ? 'KTV' : ''} Reservation
             </p>
             <h2
               id="admin-reserve-title"
@@ -350,7 +364,7 @@ export default function AdminReserveModal({
 
         {courts.length === 0 ? (
           <div className="px-5 py-6">
-            <StatusMessage type="error">No active courts found. Add courts in Supabase first.</StatusMessage>
+            <StatusMessage type="error">No active {unitLabel}s found. Add {unitLabel}s in Supabase first.</StatusMessage>
           </div>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain admin-scroll lg:overflow-hidden lg:flex lg:flex-col">
@@ -388,18 +402,18 @@ export default function AdminReserveModal({
               {/* 2. Courts */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <SectionLabel icon="🏓">Courts</SectionLabel>
+                  <SectionLabel icon={unitIcon}>{unitLabelCap}s</SectionLabel>
                   {!allCourtsSelected && allCourtIds.length > 1 && (
                     <button
                       type="button"
                       onClick={selectAllCourts}
-                      className="text-[11px] font-semibold text-brand-gold-700 hover:text-brand-navy-900 -mt-3"
+                      className="text-[11px] font-semibold text-brand-gold-700 dark:text-brand-gold-400 hover:text-brand-navy-900 dark:hover:text-brand-gold-200 -mt-3"
                     >
                       Select all
                     </button>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {courts.map(court => {
                     const active = selectedCourtIds.includes(court.id)
                     return (
@@ -407,7 +421,7 @@ export default function AdminReserveModal({
                         key={court.id}
                         type="button"
                         onClick={() => toggleCourt(court.id)}
-                        className={`flex-1 py-3 rounded-2xl text-sm font-semibold border-2 transition-all ${
+                        className={`${isKtv ? 'min-w-[4.5rem]' : 'flex-1'} py-3 px-3 rounded-2xl text-sm font-semibold border-2 transition-all ${
                           active
                             ? 'bg-brand-gold-500 border-brand-gold-500 text-white shadow-sm'
                             : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-brand-gold-300'
@@ -441,7 +455,7 @@ export default function AdminReserveModal({
               </div>
 
               {/* 5. Repeat weekly */}
-              <div className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/60 p-4 space-y-3">
+              <div className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/60 dark:bg-slate-800/60 p-4 space-y-3">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -504,15 +518,15 @@ export default function AdminReserveModal({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={SOFT_EASE}
-                    className="rounded-2xl border border-brand-gold-200 bg-brand-gold-50/60 px-4 py-4 space-y-2"
+                    className="rounded-2xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-brand-gold-50/60 dark:bg-brand-navy-900/20 px-4 py-4 space-y-2"
                   >
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold-700">Summary</p>
-                    <p className="admin-display text-[1.5rem] text-brand-gold-700 tabular-nums leading-none">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold-700 dark:text-brand-gold-400">Summary</p>
+                    <p className="admin-display text-[1.5rem] text-brand-gold-700 dark:text-brand-gold-400 tabular-nums leading-none">
                       ₱{totalRevenue.toLocaleString()}
                     </p>
                     <div className="text-sm text-gray-700 dark:text-gray-200 space-y-0.5">
                       <p>
-                        <span className="font-semibold">{selectedCourtIds.length}</span> court{selectedCourtIds.length > 1 ? 's' : ''}
+                        <span className="font-semibold">{selectedCourtIds.length}</span> {unitLabel}{selectedCourtIds.length > 1 ? 's' : ''}
                         <span className="text-gray-400 mx-1.5">·</span>
                         <span className="font-semibold">{durationHours}h</span> per session
                       </p>
@@ -561,17 +575,24 @@ export default function AdminReserveModal({
                   <TimeSlotPicker
                     unavailableHours={unavailableHours}
                     pastHours={pastHours}
+                    blockedHours={blockedHours}
                     selectedHour={startHour}
                     duration={durationHours}
                     onSelectHour={setStartHour}
                     canStartAt={canStartAt}
                     gridClassName="grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6"
+                    operatingHours={operatingHours}
+                    {...(isKtv ? {
+                      getRate: getKtvRateForHour,
+                      getTheme: getKtvThemeForHour,
+                      rateBrackets: KTV_RATE_BRACKETS,
+                    } : {})}
                   />
                 )}
               </div>
 
               {/* ── FOOTER ── */}
-              <div className="flex-shrink-0 border-t border-gray-100 dark:border-slate-700 bg-white/80 backdrop-blur-sm px-5 lg:px-7 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div className="flex-shrink-0 border-t border-gray-100 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-5 lg:px-7 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row gap-2 sm:items-center">
                 <button
                   type="submit"
                   form="admin-reserve-form"

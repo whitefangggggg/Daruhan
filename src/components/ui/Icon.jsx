@@ -39,11 +39,11 @@ export function Icon({ icon: IconComponent, size = 'md', className = '', strokeW
 
 const BADGE_VARIANTS = {
   default: 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300',
-  green: 'bg-brand-gold-50 text-brand-gold-500',
-  red: 'bg-red-50 text-red-500',
-  blue: 'bg-blue-50 text-blue-600',
-  amber: 'bg-amber-50 text-amber-600',
-  purple: 'bg-purple-50 text-purple-600',
+  green: 'bg-brand-gold-50 dark:bg-brand-navy-900/30 text-brand-gold-500 dark:text-brand-gold-400',
+  red: 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400',
+  blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
+  amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
+  purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
 }
 
 export function IconBadge({ icon: IconComponent, variant = 'default', size = 'sm', className = '' }) {
@@ -57,8 +57,8 @@ export function IconBadge({ icon: IconComponent, variant = 'default', size = 'sm
 export function StatusMessage({ type = 'error', children, className = '' }) {
   const IconComponent = type === 'error' ? AlertTriangle : CheckCircle2
   const styles = type === 'error'
-    ? 'bg-red-50 border-red-200 text-red-600'
-    : 'bg-brand-gold-50 border-brand-gold-200 text-brand-gold-600'
+    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400'
+    : 'bg-brand-gold-50 dark:bg-brand-navy-900/30 border-brand-gold-200 dark:border-brand-gold-900/40 text-brand-gold-600 dark:text-brand-gold-400'
 
   return (
     <div className={`flex items-start gap-2 border rounded-xl p-3 text-sm ${styles} ${className}`}>

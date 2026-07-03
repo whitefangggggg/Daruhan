@@ -45,7 +45,13 @@ function parseLocalDate(str) {
   return new Date(y, m - 1, d)
 }
 
-export default function ManageBookings() {
+export default function ManageBookings({ venueType = 'court' }) {
+  const isKtv = venueType === 'ktv'
+  const unitLabel = isKtv ? 'room' : 'court'
+  const unitEmoji = isKtv ? 'microphone' : 'court'
+  const pageTitle = isKtv ? 'KTV Bookings' : 'Bookings'
+  const kicker = isKtv ? 'Admin · KTV' : 'Admin · Bookings'
+
   const [viewMonth, setViewMonth] = useState(new Date())
   const [bookings, setBookings] = useState([])
   const [courts, setCourts] = useState([])
@@ -63,14 +69,15 @@ export default function ManageBookings() {
     await refreshBookingStatuses()
     const { data, error } = await supabase
       .from('bookings')
-      .select('*, profiles(full_name, phone), courts(name), payment_methods(name, account_name)')
+      .select('*, profiles(full_name, phone), courts!inner(name, type), payment_methods(name, account_name)')
+      .eq('courts.type', venueType)
       .gte('date', format(startOfMonth(month), 'yyyy-MM-dd'))
       .lte('date', format(endOfMonth(month), 'yyyy-MM-dd'))
       .order('start_hour', { ascending: true })
     if (error) setFetchError(error.message)
     else setBookings(data ?? [])
     setLoading(false)
-  }, [])
+  }, [venueType])
 
   useEffect(() => { fetchMonth(viewMonth) }, [viewMonth, fetchMonth])
 
@@ -79,9 +86,10 @@ export default function ManageBookings() {
       .from('courts')
       .select('id, name')
       .eq('is_active', true)
+      .eq('type', venueType)
       .order('name')
       .then(({ data }) => setCourts(data ?? []))
-  }, [])
+  }, [venueType])
 
   function handleReserveSuccess() {
     fetchMonth(viewMonth)
@@ -188,14 +196,14 @@ export default function ManageBookings() {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-semibold text-gray-900 dark:text-white text-[14px] flex items-center gap-1.5">
-              <AppEmoji name="court" size={14} />
+              <AppEmoji name={unitEmoji} size={14} />
               {b.courts?.name}
             </span>
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.badge}`}>
               {meta.label}
             </span>
             {isAdminReserve && meta.category !== 'admin_unpaid' && (
-              <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/40 px-1.5 py-0.5 rounded-full">
                 Admin
               </span>
             )}
@@ -208,7 +216,7 @@ export default function ManageBookings() {
         <AdminBookingCardDetails booking={b} />
 
         {(meta.canVerify || meta.canCancel || showMarkPaid) && (
-          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100/70 flex-wrap">
+          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100/70 dark:border-slate-700/70 flex-wrap">
             {meta.canVerify && (
               <motion.button
                 whileTap={{ scale: 0.96 }}
@@ -261,6 +269,7 @@ export default function ManageBookings() {
             selectedDate={selectedDate}
             courts={courts}
             onSuccess={handleReserveSuccess}
+            venueType={venueType}
           />
         )}
       </AnimatePresence>
@@ -276,9 +285,9 @@ export default function ManageBookings() {
           className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 lg:flex-shrink-0"
         >
           <div>
-            <p className="admin-kicker mb-2">Admin · Bookings</p>
+            <p className="admin-kicker mb-2">{kicker}</p>
             <h1 className="admin-display text-[1.875rem] lg:text-[2.25rem] text-gray-900 dark:text-white leading-tight">
-              Manage <span className="gradient-text">Bookings</span>
+              Manage <span className="gradient-text">{pageTitle}</span>
             </h1>
             <div className="flex items-center gap-3 mt-3 flex-wrap text-[13px]">
               <span className="admin-chip">
@@ -608,7 +617,7 @@ export default function ManageBookings() {
         title="Cancel this booking?"
         description={
           cancelTarget
-            ? `This will cancel the ${cancelTarget.courts?.name ?? 'court'} reservation and free the slot for others.`
+            ? `This will cancel the ${cancelTarget.courts?.name ?? unitLabel} reservation and free the slot for others.`
             : ''
         }
         confirmLabel="Yes, cancel booking"

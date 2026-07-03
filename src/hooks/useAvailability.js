@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import {
   getPastHoursForDate,
+  getBlockedHoursForDate,
   canStartOnAnyCourt,
   getHoursFullyOccupied,
 } from '../utils/bookingHours'
@@ -22,7 +23,7 @@ function buildOccupiedSet(slots) {
  * A slot is pickable when at least one court can fit the booking; an hour shows
  * "Booked" only when every court has that hour taken.
  */
-export function useAvailability(courtIds, date) {
+export function useAvailability(courtIds, date, operatingHours) {
   const idList = useMemo(
     () => (Array.isArray(courtIds) ? courtIds : courtIds ? [courtIds] : []).filter(Boolean),
     [courtIds],
@@ -70,6 +71,7 @@ export function useAvailability(courtIds, date) {
   }
 
   const pastHours = useMemo(() => getPastHoursForDate(date), [date])
+  const blockedHours = useMemo(() => getBlockedHoursForDate(date, new Date(), operatingHours), [date, operatingHours])
 
   /** Hours where every court is taken — used for grid display only. */
   const unavailableHours = useMemo(
@@ -78,8 +80,8 @@ export function useAvailability(courtIds, date) {
   )
 
   const canStartAt = useCallback(
-    (startHour, durationHours) => canStartOnAnyCourt(startHour, durationHours, perCourtOccupied, pastHours),
-    [perCourtOccupied, pastHours],
+    (startHour, durationHours) => canStartOnAnyCourt(startHour, durationHours, perCourtOccupied, blockedHours, operatingHours),
+    [perCourtOccupied, blockedHours, operatingHours],
   )
 
   return {
@@ -87,6 +89,7 @@ export function useAvailability(courtIds, date) {
     unavailableHours,
     canStartAt,
     pastHours,
+    blockedHours,
     loading,
     error,
     refetch: fetchUnavailableHours,

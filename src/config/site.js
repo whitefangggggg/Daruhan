@@ -128,6 +128,10 @@ export const SITE = {
     ratePerHour: 100,
     minHours: 1,
     maxHours: 8,
+    hoursLabel: 'Open 8AM – 4AM',
+    hoursDetail: 'Daily · closed 4AM – 8AM',
+    /** Rooms reopen at openHour; closed from closeHour until openHour (overnight). */
+    operatingHours: { openHour: 8, closeHour: 4 },
   },
 }
 

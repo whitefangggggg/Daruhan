@@ -29,7 +29,6 @@ describe('classifySlotAvailability', () => {
     expect(classifySlotAvailability(3, 3)).toBe('full')
     expect(classifySlotAvailability(2, 3)).toBe('partial')
     expect(classifySlotAvailability(0, 3)).toBe('none')
-    expect(classifySlotAvailability(2, 3, { isPast: true })).toBe('none')
   })
 })
 
@@ -40,11 +39,38 @@ describe('computeSlotStates', () => {
       duration: 3,
       numCourts: 3,
       perCourtOccupied: perCourt,
+      blockedHours: new Set(),
       pastHours: new Set(),
     })
     const eightPm = states.find(s => s.hour === 20)
     expect(eightPm?.free).toBe(2)
     expect(eightPm?.state).toBe('partial')
+  })
+
+  it('omits closed hours and marks duration overflow as wontFit', () => {
+    const states = computeSlotStates({
+      duration: 2,
+      numCourts: 1,
+      perCourtOccupied: courtSets([]),
+      blockedHours: new Set(),
+      pastHours: new Set(),
+    })
+    expect(states.some(s => s.hour === 5 || s.hour === 6)).toBe(false)
+    const fourAm = states.find(s => s.hour === 4)
+    expect(fourAm?.state).toBe('wontFit')
+  })
+
+  it('marks past hours separately from wontFit', () => {
+    const past = new Set([14, 15])
+    const states = computeSlotStates({
+      duration: 1,
+      numCourts: 1,
+      perCourtOccupied: courtSets([]),
+      blockedHours: past,
+      pastHours: past,
+    })
+    expect(states.find(s => s.hour === 14)?.state).toBe('past')
+    expect(states.find(s => s.hour === 16)?.state).toBe('full')
   })
 })
 
@@ -57,7 +83,7 @@ describe('shouldShowCourtDowngradeHint', () => {
     expect(shouldShowCourtDowngradeHint({
       duration: 3,
       perCourtOccupied: perCourt,
-      pastHours: new Set(),
+      blockedHours: new Set(),
       numCourts: 3,
     })).toBe(true)
   })
@@ -66,7 +92,7 @@ describe('shouldShowCourtDowngradeHint', () => {
     expect(shouldShowCourtDowngradeHint({
       duration: 2,
       perCourtOccupied: courtSets([]),
-      pastHours: new Set(),
+      blockedHours: new Set(),
       numCourts: 1,
     })).toBe(false)
   })

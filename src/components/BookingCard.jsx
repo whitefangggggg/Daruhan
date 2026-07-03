@@ -66,7 +66,7 @@ export default function BookingCard({ booking, onClick }) {
         </h3>
       </div>
 
-      <div className="rounded-xl bg-gray-50/90 border border-gray-100 dark:border-slate-700 px-4 py-3.5 space-y-3 mb-4">
+      <div className="rounded-xl bg-gray-50/90 dark:bg-slate-800/60 border border-gray-100 dark:border-slate-700 px-4 py-3.5 space-y-3 mb-4">
         <div className="flex items-start gap-3">
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-brand-gold-200 dark:border-slate-600">
             <Calendar size={15} className="text-brand-gold-600" />

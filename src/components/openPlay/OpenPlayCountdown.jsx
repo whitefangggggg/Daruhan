@@ -69,14 +69,14 @@ export default function OpenPlayCountdown({
 
   if (compact) {
     return (
-      <span className="inline-flex items-center text-[11px] font-bold text-brand-navy-800 bg-brand-gold-100 border border-brand-gold-200 rounded-full px-2.5 py-0.5 tabular-nums">
+      <span className="inline-flex items-center text-[11px] font-bold text-brand-navy-800 dark:text-brand-gold-300 bg-brand-gold-100 dark:bg-brand-navy-900/30 border border-brand-gold-200 dark:border-brand-gold-900/40 rounded-full px-2.5 py-0.5 tabular-nums">
         {label}
       </span>
     )
   }
 
   return (
-    <span className="inline-flex items-center text-xs font-bold text-brand-navy-800 bg-brand-gold-50 dark:bg-brand-navy-900/30 border border-brand-gold-200 rounded-full px-3 py-1 tabular-nums">
+    <span className="inline-flex items-center text-xs font-bold text-brand-navy-800 dark:text-brand-gold-300 bg-brand-gold-50 dark:bg-brand-navy-900/30 border border-brand-gold-200 dark:border-brand-gold-900/40 rounded-full px-3 py-1 tabular-nums">
       {label}
     </span>
   )

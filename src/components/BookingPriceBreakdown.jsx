@@ -29,6 +29,7 @@ export default function BookingPriceBreakdown({
   paddleRate = PADDLE_RATE,
   ballRate = BALL_RATE,
   trainerRate,
+  unitLabel = 'Court',
 }) {
   const endHour = getBookingEndHour(startHour, duration)
   const trainerCost = trainerExtraTotal(trainerHours, trainerHeads, trainerRate)
@@ -60,7 +61,7 @@ export default function BookingPriceBreakdown({
         )}
 
         <div className="flex justify-between text-sm gap-4">
-          <span className="text-gray-600 dark:text-gray-300">Court &amp; date</span>
+          <span className="text-gray-600 dark:text-gray-300">{unitLabel} &amp; date</span>
           <span className="font-semibold text-gray-900 dark:text-white text-right">
             {courtName} · {format(new Date(date + 'T12:00:00'), 'MMM d, yyyy')}
           </span>
@@ -78,8 +79,8 @@ export default function BookingPriceBreakdown({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600 dark:text-gray-300">
             {courtCount > 1
-              ? `Court rental (${duration}h × ${courtCount} courts)`
-              : `Court rental (${duration}h)`}
+              ? `${unitLabel} rental (${duration}h × ${courtCount} ${unitLabel.toLowerCase()}s)`
+              : `${unitLabel} rental (${duration}h)`}
           </span>
           <span className="font-semibold text-gray-900 dark:text-white">₱{courtCost.toLocaleString()}</span>
         </div>

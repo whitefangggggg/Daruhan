@@ -6,10 +6,8 @@ import {
   RATE_BRACKETS,
   RATE_BRACKET_THEMES,
 } from '../lib/pricing'
-import { getOccupiedHours, getBookingEndHour } from '../utils/bookingHours'
+import { getOccupiedHours, getBookingEndHour, getOperatingDisplayHours } from '../utils/bookingHours'
 import { Check, X } from './ui/Icon'
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 function formatHourLabel(h) {
   if (h === 0 || h === 24) return '12MN'
@@ -27,7 +25,9 @@ function SlotChip({ className = '', children }) {
   )
 }
 
-function AvailabilityLegend({ detailed = false }) {
+function AvailabilityLegend({ detailed = false, rateBrackets, closedHoursNote }) {
+  const limitedTheme = rateBrackets[0] ? RATE_BRACKET_THEMES[rateBrackets[0].themeId] ?? rateBrackets[0].theme : null
+
   if (detailed) {
     return (
       <div className="space-y-4">
@@ -35,8 +35,8 @@ function AvailabilityLegend({ detailed = false }) {
         <div>
           <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wider">Rates</p>
           <div className="grid grid-cols-2 gap-2">
-            {RATE_BRACKETS.map(row => {
-              const theme = RATE_BRACKET_THEMES[row.themeId]
+            {rateBrackets.map(row => {
+              const theme = row.theme ?? RATE_BRACKET_THEMES[row.themeId]
               return (
                 <div key={row.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 ${theme.bg} ${theme.border}`}>
                   <div className="min-w-0">
@@ -59,14 +59,14 @@ function AvailabilityLegend({ detailed = false }) {
               <p className="text-sm text-gray-700 dark:text-gray-200">Fully booked — no courts left at this hour.</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`shrink-0 w-12 h-8 rounded-lg flex items-center justify-center border-2 border-amber-400 dark:border-amber-500 relative ${RATE_BRACKET_THEMES.daytime.bg}`} aria-hidden>
+              <span className={`shrink-0 w-12 h-8 rounded-lg flex items-center justify-center border-2 border-amber-400 dark:border-amber-500 relative ${limitedTheme?.bg ?? ''}`} aria-hidden>
                 <span className="text-[9px] font-extrabold text-white bg-amber-500 rounded px-1 leading-tight">2/4</span>
               </span>
               <p className="text-sm text-gray-700 dark:text-gray-200">Some courts are taken. You can still book with fewer courts.</p>
             </div>
             <div className="flex items-center gap-3">
               <span className="slot-wont-fit shrink-0 w-12 h-8 rounded-lg flex items-center justify-center text-[10px] font-semibold opacity-60" aria-hidden>—</span>
-              <p className="text-sm text-gray-700 dark:text-gray-200">Not available — your duration does not fit or it&apos;s in the past.</p>
+              <p className="text-sm text-gray-700 dark:text-gray-200">Not available — your duration does not fit, it&apos;s in the past, or the venue is closed{closedHoursNote ? ` (${closedHoursNote})` : ''}.</p>
             </div>
             <div className="flex items-center gap-3">
               <span className="slot-selected shrink-0 w-12 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white" aria-hidden>✓</span>
@@ -80,8 +80,8 @@ function AvailabilityLegend({ detailed = false }) {
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {RATE_BRACKETS.map(row => {
-        const theme = RATE_BRACKET_THEMES[row.themeId]
+      {rateBrackets.map(row => {
+        const theme = row.theme ?? RATE_BRACKET_THEMES[row.themeId]
         return (
           <SlotChip key={row.id} className={`border-2 ${theme.bg} ${theme.border} ${theme.text}`}>
             {row.label}
@@ -95,7 +95,7 @@ function AvailabilityLegend({ detailed = false }) {
       <SlotChip className="slot-booked text-gray-500 dark:text-gray-400">
         Taken
       </SlotChip>
-      <SlotChip className={`border-2 border-amber-400 dark:border-amber-500 ${RATE_BRACKET_THEMES.daytime.bg} ${RATE_BRACKET_THEMES.daytime.text}`}>
+      <SlotChip className={`border-2 border-amber-400 dark:border-amber-500 ${limitedTheme?.bg ?? ''} ${limitedTheme?.text ?? ''}`}>
         Limited
         <span className="bg-amber-500 text-white text-[9px] font-extrabold rounded px-1 py-px leading-none">2/4</span>
       </SlotChip>
@@ -110,7 +110,7 @@ function AvailabilityLegend({ detailed = false }) {
   )
 }
 
-function LegendSheet({ open, onClose }) {
+function LegendSheet({ open, onClose, rateBrackets, closedHoursNote }) {
   useEffect(() => {
     if (!open) return undefined
     const prev = document.body.style.overflow
@@ -145,7 +145,7 @@ function LegendSheet({ open, onClose }) {
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
               Pick a colored time slot to start your booking.
             </p>
-            <AvailabilityLegend detailed />
+            <AvailabilityLegend detailed rateBrackets={rateBrackets} closedHoursNote={closedHoursNote} />
           </motion.div>
         </motion.div>
       )}
@@ -192,22 +192,17 @@ function SlotButton({
   duration,
   onSelectFull,
   onSelectPartial,
+  getRate,
+  getTheme,
 }) {
   const inSelected = selectedHour != null && getOccupiedHours(selectedHour, duration).includes(hour)
   const isStart = hour === selectedHour
   const offset = selectedHour != null ? getOccupiedHours(selectedHour, duration).indexOf(hour) : -1
-  const theme = getThemeForHour(hour)
-  const rate = getRateForHour(hour)
+  const theme = getTheme(hour)
+  const rate = getRate(hour)
 
-  if (state === 'past') {
-    return (
-      <SlotCell disabled className="slot-wont-fit cursor-not-allowed opacity-50">
-        <span>{formatHourLabel(hour)}</span>
-        <span className="text-[9px] mt-0.5 font-normal">past</span>
-      </SlotCell>
-    )
-  }
-
+  // Hours inside the chosen block always render as selected, even when they
+  // couldn't be a start time for this duration on their own (e.g. 8AM in a 17h block).
   if (inSelected) {
     return (
       <SlotCell
@@ -218,6 +213,24 @@ function SlotButton({
         <span className="text-[9px] mt-0.5 opacity-90">
           {isStart ? 'Start' : `+${offset}h`}
         </span>
+      </SlotCell>
+    )
+  }
+
+  if (state === 'past') {
+    return (
+      <SlotCell disabled className="slot-wont-fit cursor-not-allowed opacity-50">
+        <span>{formatHourLabel(hour)}</span>
+        <span className="text-[9px] mt-0.5 font-normal">past</span>
+      </SlotCell>
+    )
+  }
+
+  if (state === 'wontFit') {
+    return (
+      <SlotCell disabled className="slot-wont-fit cursor-not-allowed">
+        <span>{formatHourLabel(hour)}</span>
+        <span className="text-[9px] mt-0.5 font-normal">won&apos;t fit</span>
       </SlotCell>
     )
   }
@@ -266,8 +279,15 @@ export default function UserBookingTimeGrid({
   onRequestPartialConfirm,
   showDowngradeHint = false,
   onDismissDowngradeHint,
+  operatingHours,
+  getRate = getRateForHour,
+  getTheme = getThemeForHour,
+  rateBrackets = RATE_BRACKETS,
+  closedHoursNote = '5AM–7AM',
+  unitLabel = 'court',
 }) {
   const [legendOpen, setLegendOpen] = useState(false)
+  const HOURS = useMemo(() => getOperatingDisplayHours(operatingHours), [operatingHours])
   const stateByHour = useMemo(() => new Map(slotStates.map(s => [s.hour, s])), [slotStates])
 
   useEffect(() => {
@@ -277,7 +297,7 @@ export default function UserBookingTimeGrid({
       onSelectHour(null)
       return
     }
-    if (slot.state === 'past' || slot.state === 'none') {
+    if (slot.state === 'past' || slot.state === 'wontFit' || slot.state === 'none') {
       onSelectHour(null)
       return
     }
@@ -310,10 +330,10 @@ export default function UserBookingTimeGrid({
       </div>
 
       <div className="hidden md:block mb-4">
-        <AvailabilityLegend />
+        <AvailabilityLegend rateBrackets={rateBrackets} closedHoursNote={closedHoursNote} />
       </div>
 
-      <LegendSheet open={legendOpen} onClose={() => setLegendOpen(false)} />
+      <LegendSheet open={legendOpen} onClose={() => setLegendOpen(false)} rateBrackets={rateBrackets} closedHoursNote={closedHoursNote} />
 
       <div className="max-h-[min(420px,52vh)] overflow-y-auto overscroll-contain -mx-1 px-1 pb-1">
         <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5 sm:gap-2">
@@ -330,6 +350,8 @@ export default function UserBookingTimeGrid({
                 duration={duration}
                 onSelectFull={onSelectHour}
                 onSelectPartial={(h, free) => onRequestPartialConfirm({ hour: h, availableCourts: free })}
+                getRate={getRate}
+                getTheme={getTheme}
               />
             )
           })}
@@ -347,7 +369,7 @@ export default function UserBookingTimeGrid({
                 {formatHourLabel(selectedHour)}
                 {' '}–{' '}
                 {formatHourLabel(previewEnd)}
-                <span className="text-gray-400 ml-1">({duration}h · {numCourts} court{numCourts !== 1 ? 's' : ''})</span>
+                <span className="text-gray-400 ml-1">({duration}h · {numCourts} {unitLabel}{numCourts !== 1 ? 's' : ''})</span>
               </span>
             </div>
           </div>

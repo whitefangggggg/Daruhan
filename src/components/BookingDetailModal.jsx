@@ -120,7 +120,7 @@ export default function BookingDetailModal({ booking, onClose, onCancel, cancell
             totalPrice={total_price}
           />
 
-          <div className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 p-4 space-y-3">
+          <div className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/60 p-4 space-y-3">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Payment</p>
 
             <div className="space-y-2.5 text-sm">

@@ -114,7 +114,7 @@ export default function ManageOpenPlay() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('courts').select('id, name').eq('is_active', true).order('name'),
+      supabase.from('courts').select('id, name').eq('is_active', true).eq('type', 'court').order('name'),
       fetchPosts(),
     ]).then(([courtsRes]) => {
       if (courtsRes.data) setCourts(courtsRes.data)
@@ -607,7 +607,7 @@ export default function ManageOpenPlay() {
                       <button
                         type="button"
                         onClick={() => cancelPost(post.id)}
-                        className="text-[12px] font-semibold text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg"
+                        className="text-[12px] font-semibold text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 px-3 py-1.5 rounded-lg"
                       >
                         Cancel post
                       </button>

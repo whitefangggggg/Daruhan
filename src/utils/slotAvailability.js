@@ -1,75 +1,85 @@
 import {
   countCourtsFreeAtSlot,
-  getMaxDurationForStart,
-  isValidBookingRange,
+  getMaxBookableDuration,
+  getOperatingDisplayHours,
 } from './bookingHours'
 
-/** @typedef {'past' | 'none' | 'partial' | 'full'} SlotAvailabilityState */
+/** @typedef {'past' | 'closed' | 'wontFit' | 'none' | 'partial' | 'full'} SlotAvailabilityState */
 
 /**
  * maxFreeForFullDuration(h): courts that stay free for every hour in [h, h + duration).
  * Same as countCourtsFreeAtSlot — min free courts across the range.
  */
-export function maxFreeCourtsForFullDuration(startHour, durationHours, perCourtOccupied, pastHours = new Set()) {
-  return countCourtsFreeAtSlot(startHour, durationHours, perCourtOccupied, pastHours)
+export function maxFreeCourtsForFullDuration(startHour, durationHours, perCourtOccupied, blockedHours = new Set(), operatingHours) {
+  return countCourtsFreeAtSlot(startHour, durationHours, perCourtOccupied, blockedHours, operatingHours)
 }
 
 /**
  * @param {number} free
  * @param {number} numCourts
- * @param {{ isPast?: boolean, invalid?: boolean }} [opts]
  * @returns {SlotAvailabilityState}
  */
-export function classifySlotAvailability(free, numCourts, { isPast = false, invalid = false } = {}) {
-  if (isPast || invalid || free <= 0) return 'none'
+export function classifySlotAvailability(free, numCourts) {
+  if (free <= 0) return 'none'
   if (free >= numCourts) return 'full'
   return 'partial'
 }
 
 /**
- * Precompute all 24 start-hour slots for the grid (memo-friendly single pass).
+ * Precompute slot states for the operating-hours grid (memo-friendly single pass).
  * @returns {Array<{ hour: number, free: number, state: SlotAvailabilityState }>}
  */
-export function computeSlotStates({ duration, numCourts, perCourtOccupied, pastHours = new Set() }) {
+export function computeSlotStates({
+  duration,
+  numCourts,
+  perCourtOccupied,
+  blockedHours = new Set(),
+  pastHours = new Set(),
+  operatingHours,
+}) {
   const states = []
-  for (let hour = 0; hour < 24; hour++) {
-    const isPast = pastHours.has(hour)
-    const invalid = !isValidBookingRange(hour, duration)
-    const free = invalid || isPast
-      ? 0
-      : maxFreeCourtsForFullDuration(hour, duration, perCourtOccupied, pastHours)
+  for (const hour of getOperatingDisplayHours(operatingHours)) {
+    if (pastHours.has(hour)) {
+      states.push({ hour, free: 0, state: 'past' })
+      continue
+    }
 
+    if (getMaxBookableDuration(hour, blockedHours, operatingHours) < duration) {
+      states.push({ hour, free: 0, state: 'wontFit' })
+      continue
+    }
+
+    const free = maxFreeCourtsForFullDuration(hour, duration, perCourtOccupied, blockedHours, operatingHours)
     states.push({
       hour,
       free,
-      state: isPast ? 'past' : classifySlotAvailability(free, numCourts, { invalid }),
+      state: classifySlotAvailability(free, numCourts),
     })
   }
   return states
 }
 
-export function countFullMatchSlots(duration, perCourtOccupied, pastHours, numCourts) {
+export function countFullMatchSlots(duration, perCourtOccupied, blockedHours, numCourts, operatingHours) {
   let count = 0
-  for (let hour = 0; hour < 24; hour++) {
-    if (pastHours.has(hour)) continue
-    if (!isValidBookingRange(hour, duration)) continue
-    const free = maxFreeCourtsForFullDuration(hour, duration, perCourtOccupied, pastHours)
+  for (const hour of getOperatingDisplayHours(operatingHours)) {
+    if (getMaxBookableDuration(hour, blockedHours, operatingHours) < duration) continue
+    const free = maxFreeCourtsForFullDuration(hour, duration, perCourtOccupied, blockedHours, operatingHours)
     if (free >= numCourts) count += 1
   }
   return count
 }
 
 /** True when choosing numCourts - 1 unlocks at least two additional full-match starts. */
-export function shouldShowCourtDowngradeHint({ duration, perCourtOccupied, pastHours, numCourts }) {
+export function shouldShowCourtDowngradeHint({ duration, perCourtOccupied, blockedHours, numCourts, operatingHours }) {
   if (numCourts <= 1) return false
-  const atCurrent = countFullMatchSlots(duration, perCourtOccupied, pastHours, numCourts)
-  const atReduced = countFullMatchSlots(duration, perCourtOccupied, pastHours, numCourts - 1)
+  const atCurrent = countFullMatchSlots(duration, perCourtOccupied, blockedHours, numCourts, operatingHours)
+  const atReduced = countFullMatchSlots(duration, perCourtOccupied, blockedHours, numCourts - 1, operatingHours)
   return atReduced - atCurrent >= 2
 }
 
-export function isStartHourValidForCourts(startHour, duration, numCourts, perCourtOccupied, pastHours) {
+export function isStartHourValidForCourts(startHour, duration, numCourts, perCourtOccupied, blockedHours, operatingHours) {
   if (startHour == null) return false
-  return maxFreeCourtsForFullDuration(startHour, duration, perCourtOccupied, pastHours) >= numCourts
+  return maxFreeCourtsForFullDuration(startHour, duration, perCourtOccupied, blockedHours, operatingHours) >= numCourts
 }
 
-export { getMaxDurationForStart }
+export { getMaxDurationForStart } from './bookingHours'

@@ -16,6 +16,7 @@ import Book from './pages/Book'
 import MyBookings from './pages/MyBookings'
 import AdminDashboard from './pages/admin/Dashboard'
 import ManageBookings from './pages/admin/ManageBookings'
+import ManageKtv from './pages/admin/ManageKtv'
 import ManageSlots from './pages/admin/ManageSlots'
 import ManageUsers from './pages/admin/ManageUsers'
 import ManageOpenPlay from './pages/admin/ManageOpenPlay'
@@ -66,10 +67,10 @@ function AppShell() {
   const { theme } = useTheme()
   const hideChrome = location.pathname === '/onboarding' || location.pathname === '/auth/callback'
   const isAdminArea = location.pathname.startsWith('/admin')
-  const isPublicPage = location.pathname === '/' || location.pathname === '/login'
-  
-  // Suppress dark mode on public pages
-  const activeTheme = isPublicPage ? 'light' : theme
+  const isLandingPage = location.pathname === '/'
+
+  // Landing keeps its own fixed light palette; every other page follows the toggle.
+  const activeTheme = isLandingPage ? 'light' : theme
 
   useEffect(() => {
     const root = document.documentElement
@@ -143,6 +144,7 @@ const router = createBrowserRouter([
       { path: '/guide', element: <ProtectedRoute userOnly><Guide /></ProtectedRoute> },
       { path: '/admin', element: <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute> },
       { path: '/admin/bookings', element: <ProtectedRoute adminOnly><ManageBookings /></ProtectedRoute> },
+      { path: '/admin/ktv', element: <ProtectedRoute adminOnly><ManageKtv /></ProtectedRoute> },
       { path: '/admin/slots', element: <ProtectedRoute adminOnly><ManageSlots /></ProtectedRoute> },
       { path: '/admin/users', element: <ProtectedRoute adminOnly><ManageUsers /></ProtectedRoute> },
       { path: '/admin/open-play', element: <ProtectedRoute adminOnly><ManageOpenPlay /></ProtectedRoute> },

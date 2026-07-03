@@ -11,6 +11,7 @@ import {
   getHoursFullyOccupied,
   isBookingRangeFree,
   getVenueClosedHours,
+  getOperatingDisplayHours,
 } from './bookingHours.js'
 import { calculateTotal } from '../lib/pricing.js'
 
@@ -119,6 +120,15 @@ describe('isValidBookingRange / getMaxDurationForStart', () => {
   it('does not wrap occupied hours to midnight', () => {
     expect(getOccupiedHours(22, 3)).toEqual([22, 23])
     expect(canStartOnAnyCourt(22, 3, [new Set()])).toBe(false)
+  })
+})
+
+describe('getOperatingDisplayHours', () => {
+  it('lists 7AM–12MN then 12MN–5AM, excluding the 5AM–7AM closed window', () => {
+    expect(getOperatingDisplayHours()).toEqual([
+      7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+      0, 1, 2, 3, 4,
+    ])
   })
 })
 

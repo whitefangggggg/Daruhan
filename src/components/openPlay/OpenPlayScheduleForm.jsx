@@ -68,11 +68,11 @@ function CourtAvailabilityGrid({ courts, courtAnalysis, selectedCourtId, onSelec
         const available = analysis?.available
         const conflict = analysis?.primaryConflict
 
-        let stateClass = 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:border-brand-gold-300 hover:bg-brand-gold-50/50'
+        let stateClass = 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:border-brand-gold-300 hover:bg-brand-gold-50/50 dark:hover:bg-slate-700/50'
         if (selected && available) {
           stateClass = 'border-brand-gold-500 bg-brand-gold-500 text-white shadow-md shadow-brand-gold-200/70 ring-2 ring-brand-gold-300/50'
         } else if (selected && !available) {
-          stateClass = 'border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-300/50'
+          stateClass = 'border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 text-amber-950 dark:text-amber-200 ring-2 ring-amber-300/50 dark:ring-amber-800/40'
         } else if (!available) {
           stateClass = 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 text-gray-400 cursor-not-allowed opacity-80'
         }
@@ -88,7 +88,7 @@ function CourtAvailabilityGrid({ courts, courtAnalysis, selectedCourtId, onSelec
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-bold text-[15px] leading-tight">{court.name}</p>
-                <p className={`text-[11px] mt-1.5 font-medium leading-snug ${selected && available ? 'text-brand-gold-50/90' : available ? 'text-brand-gold-700' : 'text-gray-500 dark:text-gray-400'}`}>
+                <p className={`text-[11px] mt-1.5 font-medium leading-snug ${selected && available ? 'text-brand-gold-50/90' : available ? 'text-brand-gold-700 dark:text-brand-gold-400' : 'text-gray-500 dark:text-gray-400'}`}>
                   {available ? 'Available for this window' : conflict ?? 'Not available'}
                 </p>
               </div>
@@ -115,15 +115,15 @@ function DayScheduleSummary({ courtAnalysis, date, loading }) {
   const blocked = courtAnalysis.filter(c => !c.available && c.conflicts.some(x => x.type !== 'booking' && x.type !== 'past')).length
 
   return (
-    <div className="rounded-xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-brand-gold-50/40 px-4 py-3">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-brand-navy-800 mb-1">
+    <div className="rounded-xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-brand-gold-50/40 dark:bg-brand-navy-900/20 px-4 py-3">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-brand-navy-800 dark:text-brand-gold-300 mb-1">
         {format(parseISO(date), 'EEEE, MMM d')}
       </p>
       {loading ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">Loading schedule…</p>
       ) : (
         <p className="text-sm text-gray-700 dark:text-gray-200">
-          <span className="font-semibold text-brand-gold-700">{free} of {total}</span> court{total !== 1 ? 's' : ''} free for your selected window
+          <span className="font-semibold text-brand-gold-700 dark:text-brand-gold-400">{free} of {total}</span> court{total !== 1 ? 's' : ''} free for your selected window
           {busy > 0 && <> · {busy} with booking{busy !== 1 ? 's' : ''}</>}
           {blocked > 0 && <> · {blocked} blocked</>}
         </p>
@@ -218,7 +218,7 @@ export default function OpenPlayScheduleForm({
 
   return (
     <>
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-700 px-5 py-4 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-700 px-5 py-4 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold-600 mb-0.5">
             Admin · Open Play
@@ -283,9 +283,9 @@ export default function OpenPlayScheduleForm({
           </div>
 
           {selectedCourtAnalysis && !selectedCourtAvailable && selectedCourtAnalysis.conflicts.length > 0 && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3">
-              <p className="text-sm font-semibold text-amber-900 mb-1">Conflicts on {selectedCourtAnalysis.courtName}</p>
-              <ul className="text-sm text-amber-800 space-y-1">
+            <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-900/20 px-4 py-3">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-300 mb-1">Conflicts on {selectedCourtAnalysis.courtName}</p>
+              <ul className="text-sm text-amber-800 dark:text-amber-400 space-y-1">
                 {selectedCourtAnalysis.conflicts.map((c, i) => (
                   <li key={`${c.type}-${i}`}>• {c.summary}</li>
                 ))}

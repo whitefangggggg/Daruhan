@@ -29,10 +29,10 @@ export default function OpenPlayPostCard({
     <article
       className={`relative overflow-hidden rounded-2xl border transition-all duration-200 ${
         muted
-          ? 'border-gray-200 dark:border-slate-700 bg-gray-50/80 opacity-75'
+          ? 'border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/60 opacity-75'
           : isLive
             ? `${theme.border} ${theme.shadow} ${theme.borderHover} ${theme.shadowHover} hover:-translate-y-0.5`
-            : 'border-brand-gold-200/80 bg-white/95 shadow-sm hover:shadow-md hover:border-brand-gold-300'
+            : 'border-brand-gold-200/80 dark:border-slate-700 bg-white/95 dark:bg-slate-800/90 shadow-sm hover:shadow-md hover:border-brand-gold-300 dark:hover:border-brand-gold-700'
       }`}
       style={isLive ? { background: theme.cardGradient } : undefined}
     >
@@ -89,7 +89,7 @@ export default function OpenPlayPostCard({
             {post.title || 'Open Play Session'}
           </h3>
           <p className={`text-sm mt-1 font-semibold ${
-            muted ? 'text-gray-500 dark:text-gray-400' : isLive ? theme.meta : 'text-brand-gold-700'
+            muted ? 'text-gray-500 dark:text-gray-400' : isLive ? theme.meta : 'text-brand-gold-700 dark:text-brand-gold-400'
           }`}>
             {post.courts?.name ?? 'Court'} · {format(parseISO(post.date), 'EEE, MMM d')}
             {' · '}
@@ -135,7 +135,7 @@ export default function OpenPlayPostCard({
                       type="button"
                       disabled={rsvpBusy}
                       onClick={onUnmarkRsvped}
-                      className="text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-rose-700 disabled:opacity-50"
+                      className="text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-rose-700 dark:hover:text-rose-400 disabled:opacity-50"
                     >
                       Remove
                     </button>
@@ -174,7 +174,7 @@ export default function OpenPlayPostCard({
             )}
             {post.revenue != null && (
               <p>
-                Revenue: <span className="font-semibold text-brand-gold-700">₱{Number(post.revenue).toLocaleString()}</span>
+                Revenue: <span className="font-semibold text-brand-gold-700 dark:text-brand-gold-400">₱{Number(post.revenue).toLocaleString()}</span>
               </p>
             )}
           </div>

@@ -17,15 +17,15 @@ const PERIODS = [
 const END_HOURS = Array.from({ length: 24 }, (_, i) => i + 1)
 
 function HourChip({ hour, selected, inRange, disabled, onClick }) {
-  let stateClass = 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:border-brand-gold-300 hover:bg-brand-gold-50/60'
+  let stateClass = 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:border-brand-gold-300 dark:hover:border-brand-gold-600 hover:bg-brand-gold-50/60 dark:hover:bg-brand-navy-900/30'
   if (disabled) {
-    stateClass = 'border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 text-gray-300 cursor-not-allowed'
+    stateClass = 'border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 text-gray-300 dark:text-gray-600 cursor-not-allowed'
   } else if (selected === 'start') {
     stateClass = 'border-brand-gold-500 bg-brand-gold-500 text-white shadow-md shadow-brand-gold-200/80 ring-2 ring-brand-gold-300/60'
   } else if (selected === 'end') {
     stateClass = 'border-brand-navy-700 bg-brand-navy-700 text-white shadow-md shadow-brand-navy-900/30 ring-2 ring-brand-gold-300/60'
   } else if (inRange) {
-    stateClass = 'border-brand-gold-200 bg-brand-gold-100/80 text-brand-navy-900'
+    stateClass = 'border-brand-gold-200 dark:border-brand-gold-800/50 bg-brand-gold-100/80 dark:bg-brand-navy-900/30 text-brand-navy-900 dark:text-brand-gold-200'
   }
 
   return (
@@ -44,20 +44,20 @@ function HourChip({ hour, selected, inRange, disabled, onClick }) {
 function TimeSection({ step, tone, icon: Icon, title, value, children }) {
   const tones = {
     start: {
-      panel: 'border-brand-gold-200 bg-brand-gold-50/40',
+      panel: 'border-brand-gold-200 dark:border-brand-gold-900/40 bg-brand-gold-50/40 dark:bg-brand-navy-900/20',
       stripe: 'bg-brand-gold-50 dark:bg-brand-navy-900/30',
       step: 'bg-brand-gold-500 text-white',
       badge: 'bg-brand-gold-500 text-white shadow-sm shadow-brand-gold-200',
-      title: 'text-brand-navy-900',
-      hint: 'text-brand-gold-700/70',
+      title: 'text-brand-navy-900 dark:text-brand-gold-100',
+      hint: 'text-brand-gold-700/70 dark:text-brand-gold-400/80',
     },
     end: {
-      panel: 'border-brand-navy-700/30 bg-brand-navy-900/5',
-      stripe: 'bg-brand-navy-900/10',
+      panel: 'border-brand-navy-700/30 dark:border-brand-navy-600/40 bg-brand-navy-900/5 dark:bg-brand-navy-900/20',
+      stripe: 'bg-brand-navy-900/10 dark:bg-brand-navy-700/30',
       step: 'bg-brand-navy-700 text-white',
       badge: 'bg-brand-navy-700 text-white shadow-sm shadow-brand-navy-900/20',
-      title: 'text-brand-navy-900',
-      hint: 'text-brand-navy-700/70',
+      title: 'text-brand-navy-900 dark:text-brand-gold-100',
+      hint: 'text-brand-navy-700/70 dark:text-brand-gold-300/70',
     },
   }
   const t = tones[tone]
@@ -66,7 +66,7 @@ function TimeSection({ step, tone, icon: Icon, title, value, children }) {
     <section className={`relative overflow-hidden rounded-xl border-2 ${t.panel}`}>
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${t.stripe}`} aria-hidden />
 
-      <div className="px-4 pt-4 pb-3 border-b border-black/[0.04]">
+      <div className="px-4 pt-4 pb-3 border-b border-black/[0.04] dark:border-white/[0.06]">
         <div className="flex items-center gap-3">
           <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${t.step}`}>
             {step}
@@ -123,14 +123,14 @@ export default function OpenPlayTimeRangePicker({
   }
 
   return (
-    <div className="rounded-xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-gradient-to-br from-brand-gold-50/50 to-white p-4 space-y-4">
+    <div className="rounded-xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-gradient-to-br from-brand-gold-50/50 to-white dark:from-brand-navy-900/30 dark:to-slate-800 p-4 space-y-4">
       {/* Summary */}
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl bg-brand-gold-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
           <Clock size={18} strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-navy-800 mb-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-navy-800 dark:text-brand-gold-300 mb-1">
             Session time
           </p>
           <div className="flex items-center gap-2 flex-wrap">
@@ -155,7 +155,7 @@ export default function OpenPlayTimeRangePicker({
               : 'End time must be after start — same day only'}
           </p>
           {scheduleHint && (
-            <p className={`text-[12px] mt-2 font-medium ${scheduleHint.includes('No courts') ? 'text-amber-700' : 'text-brand-gold-700'}`}>
+            <p className={`text-[12px] mt-2 font-medium ${scheduleHint.includes('No courts') ? 'text-amber-700 dark:text-amber-400' : 'text-brand-gold-700 dark:text-brand-gold-400'}`}>
               {scheduleHint}
             </p>
           )}
@@ -171,7 +171,7 @@ export default function OpenPlayTimeRangePicker({
           <span>6PM</span>
           <span>12MN</span>
         </div>
-        <div className="relative flex h-3.5 rounded-full overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200/80">
+        <div className="relative flex h-3.5 rounded-full overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200/80 dark:border-slate-700">
           {Array.from({ length: 24 }, (_, h) => {
             const active = rangeHours.has(h)
             const isStart = h === startHour
@@ -195,12 +195,12 @@ export default function OpenPlayTimeRangePicker({
           {valid && (
             <>
               <span
-                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-brand-gold-600 border-2 border-white shadow-sm"
+                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-brand-gold-600 border-2 border-white dark:border-slate-900 shadow-sm"
                 style={{ left: `calc(${(startHour / 24) * 100}% - 4px)` }}
                 aria-hidden
               />
               <span
-                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-brand-navy-800 border-2 border-white shadow-sm"
+                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-brand-navy-800 border-2 border-white dark:border-slate-900 shadow-sm"
                 style={{ left: `calc(${((endHour - 1) / 24) * 100}% - 4px)` }}
                 aria-hidden
               />
@@ -220,7 +220,7 @@ export default function OpenPlayTimeRangePicker({
           <div className="space-y-2.5">
             {PERIODS.map(period => (
               <div key={period.label}>
-                <p className="text-[10px] font-semibold text-brand-navy-800/50 uppercase tracking-wider mb-1.5">
+                <p className="text-[10px] font-semibold text-brand-navy-800/50 dark:text-brand-gold-300/60 uppercase tracking-wider mb-1.5">
                   {period.label}
                 </p>
                 <div className="grid grid-cols-6 gap-1.5">
@@ -258,7 +258,7 @@ export default function OpenPlayTimeRangePicker({
               />
             ))}
           </div>
-          <p className="text-[11px] text-brand-navy-800/60 mt-3 font-medium">
+          <p className="text-[11px] text-brand-navy-800/60 dark:text-brand-gold-300/70 mt-3 font-medium">
             Example: {formatOpenPlayHour(startHour)} start → {formatOpenPlayHour(endHour)} end = {duration} hour{duration !== 1 ? 's' : ''}.
           </p>
         </TimeSection>

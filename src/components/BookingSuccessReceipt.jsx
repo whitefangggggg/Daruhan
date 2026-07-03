@@ -29,6 +29,7 @@ export default function BookingSuccessReceipt({
   paymentSenderPlatform,
   secondsLeft,
   onGoToBookings,
+  unitLabel = 'Court',
 }) {
   const status = { label: 'Paid — waiting for confirmation', tone: 'pending' }
   const tone = STATUS_TONE[status.tone]
@@ -75,9 +76,10 @@ export default function BookingSuccessReceipt({
           trainerHeads={trainerHeads}
           userNotes={userNotes}
           totalPrice={totalPrice}
+          unitLabel={unitLabel}
         />
 
-        <div className="rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 px-4 py-3 space-y-2 text-sm">
+        <div className="rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/60 px-4 py-3 space-y-2 text-sm">
           <div className="flex justify-between gap-4">
             <span className="text-gray-500 dark:text-gray-400">Paid via</span>
             <span className="font-semibold text-gray-900 dark:text-white text-right">{paymentMethodName ?? '—'}</span>
@@ -113,7 +115,7 @@ export default function BookingSuccessReceipt({
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
               Send us a quick chat on our Facebook page with your booking name and payment reference.
-              We&apos;ll confirm your court much faster than waiting for verification alone.
+              We&apos;ll confirm your {unitLabel.toLowerCase()} much faster than waiting for verification alone.
             </p>
           </div>
         </div>
@@ -133,17 +135,17 @@ export default function BookingSuccessReceipt({
         </p>
       </div>
 
-      <div className="rounded-2xl border border-brand-gold-200 bg-brand-gold-50/60 px-4 py-4 text-center space-y-3">
+      <div className="rounded-2xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-brand-gold-50/60 dark:bg-brand-navy-900/20 px-4 py-4 text-center space-y-3">
         <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
           Track confirmation and updates anytime in{' '}
-          <Link to="/my-bookings" className="font-semibold text-brand-gold-600 hover:text-brand-gold-600 underline underline-offset-2">
+          <Link to="/my-bookings" className="font-semibold text-brand-gold-600 dark:text-brand-gold-400 hover:text-brand-gold-600 dark:hover:text-brand-gold-300 underline underline-offset-2">
             My Bookings
           </Link>
           .
         </p>
 
         <div className="max-w-xs mx-auto space-y-2">
-          <div className="h-1.5 rounded-full bg-brand-gold-100 overflow-hidden">
+          <div className="h-1.5 rounded-full bg-brand-gold-100 dark:bg-slate-700 overflow-hidden">
             <div
               className="h-full rounded-full bg-brand-gold-500 transition-[width] duration-1000 ease-linear"
               style={{ width: `${progress}%` }}

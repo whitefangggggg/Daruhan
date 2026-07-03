@@ -1,13 +1,13 @@
 /** Map Supabase / Postgres hold-creation errors to user-facing copy. */
-export function formatHoldError(error) {
+export function formatHoldError(error, unitLabel = 'courts') {
   const message = error?.message ?? ''
   const code = error?.code ?? ''
 
   if (message.includes('SLOT_TAKEN') || code === '23P01') {
-    return 'No courts are available for that time range anymore. Please pick another slot.'
+    return `No ${unitLabel} are available for that time range anymore. Please pick another slot.`
   }
   if (message.includes('NO_COURTS')) {
-    return 'No active courts are configured yet. Please contact support.'
+    return `No active ${unitLabel} are configured yet. Please contact support.`
   }
   if (message.includes('Not authenticated')) {
     return 'Your session expired. Please sign in again and retry.'

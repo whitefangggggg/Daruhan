@@ -28,10 +28,10 @@ export default function PaymentQrImage({ method, qrSrc, onRetryLoad }) {
 
   if (loadError) {
     return (
-      <div className="w-[220px] min-h-[220px] rounded-xl border-2 border-amber-200 bg-amber-50 flex flex-col items-center justify-center gap-3 p-4 text-center">
+      <div className="w-[220px] min-h-[220px] rounded-xl border-2 border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 flex flex-col items-center justify-center gap-3 p-4 text-center">
         <span className="text-3xl">⚠️</span>
-        <p className="text-xs font-semibold text-amber-900">Couldn&apos;t load the QR image</p>
-        <p className="text-xs text-amber-800 leading-snug">
+        <p className="text-xs font-semibold text-amber-900 dark:text-amber-300">Couldn&apos;t load the QR image</p>
+        <p className="text-xs text-amber-800 dark:text-amber-400 leading-snug">
           The link may have expired. Tap retry to refresh payment options.
         </p>
         <button
@@ -41,7 +41,7 @@ export default function PaymentQrImage({ method, qrSrc, onRetryLoad }) {
             setImgKey(k => k + 1)
             onRetryLoad?.()
           }}
-          className="text-xs font-semibold text-amber-900 underline hover:text-amber-950"
+          className="text-xs font-semibold text-amber-900 dark:text-amber-300 underline hover:text-amber-950 dark:hover:text-amber-200"
         >
           Retry QR
         </button>

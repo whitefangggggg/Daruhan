@@ -130,11 +130,11 @@ export default function Profile() {
           <p className="font-bold text-gray-900 dark:text-white truncate">{profile.full_name || 'Player'}</p>
           <p className="text-sm text-gray-400 truncate">{user.email}</p>
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-gold-50 text-brand-gold-600 border border-brand-gold-200">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-gold-50 dark:bg-brand-navy-900/30 text-brand-gold-600 dark:text-brand-gold-400 border border-brand-gold-200 dark:border-brand-gold-900/40">
               {isGoogleUser ? 'Google Account' : 'Email Account'}
             </span>
             {profile.role === 'admin' && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
                 Admin
               </span>
             )}
@@ -231,7 +231,7 @@ export default function Profile() {
           </div>
 
           <button type="submit" disabled={passwordSaving}
-            className="w-full text-sm font-semibold py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-slate-800/50 transition-colors disabled:opacity-50">
+            className="w-full text-sm font-semibold py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors disabled:opacity-50">
             {passwordSaving ? 'Updating…' : 'Update Password'}
           </button>
         </form>
