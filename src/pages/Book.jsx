@@ -314,8 +314,8 @@ export default function Book() {
       !allowNavigationRef.current
       && !resumeOpen
       && hasBookingProgress
-      && currentLocation.pathname === '/book'
-      && nextLocation.pathname !== '/book',
+      && currentLocation.pathname === '/book/court'
+      && nextLocation.pathname !== '/book/court',
   )
 
   const collectDraftSnapshot = useCallback(() => ({
@@ -873,11 +873,11 @@ export default function Book() {
     setError(null)
     if (step === 1) {
       if (hasBookingProgress) {
-        setManualLeaveTo('/home')
+        setManualLeaveTo('/book')
         setLeaveOpen(true)
         return
       }
-      navigate('/home')
+      navigate('/book')
       return
     }
     goBack()

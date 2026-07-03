@@ -11,7 +11,7 @@ const EXPLORE_LINKS = [
 ]
 
 const BOOKING_LINKS = [
-  { label: 'Book a Court', to: '/book' },
+  { label: 'Book', to: '/book' },
   { label: 'Sign In', to: '/login' },
   { label: 'My Bookings', to: '/my-bookings' },
   { label: 'Player Guide', to: '/guide' },

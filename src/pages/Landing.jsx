@@ -212,7 +212,7 @@ export default function Landing() {
                       style={{ boxShadow: THEME.shadow.goldLg }}
                     >
                       <Iconify icon="noto:ping-pong" width={20} height={20} />
-                      Book a Court
+                      Book now
                     </Link>
                   </motion.div>
                   <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.99 }} transition={transition.hover}>

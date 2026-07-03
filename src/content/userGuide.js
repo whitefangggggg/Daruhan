@@ -42,10 +42,10 @@ export const USER_GUIDE_CATEGORIES = [
       {
         id: 'user-book-court',
         title: 'Book a court',
-        path: '/book',
+        path: '/book/court',
         summary: 'Pick a date, time, and duration, then pay to reserve.',
         steps: [
-          'Tap Book in the navbar or the Book Court button on Home.',
+          'Tap Book in the navbar, then choose Book a Court.',
           'Choose how many courts you need (1–4) — we auto-assign that many when your slot is free.',
       'Choose a date, then tap an available start hour on the time grid.',
           'Green highlights your selected block; striped slots are already taken.',

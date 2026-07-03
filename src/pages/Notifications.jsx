@@ -69,7 +69,7 @@ export default function Notifications() {
             We&apos;ll notify you when bookings are confirmed, cancelled, or updated.
           </p>
           <Link to="/book" className="btn-primary text-sm inline-block">
-            Book a court
+            Book now
           </Link>
         </div>
       ) : (

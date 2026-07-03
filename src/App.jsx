@@ -15,6 +15,7 @@ import Profile from './pages/Profile'
 import Book from './pages/Book'
 import MyBookings from './pages/MyBookings'
 import AdminDashboard from './pages/admin/Dashboard'
+import BookChoose from './pages/BookChoose'
 import ManageBookings from './pages/admin/ManageBookings'
 import ManageKtv from './pages/admin/ManageKtv'
 import ManageSlots from './pages/admin/ManageSlots'
@@ -139,7 +140,8 @@ const router = createBrowserRouter([
       { path: '/auth/callback', element: <AuthCallback /> },
       { path: '/onboarding', element: <ProtectedRoute skipOnboarding userOnly><Onboarding /></ProtectedRoute> },
       { path: '/profile', element: <ProtectedRoute userOnly><Profile /></ProtectedRoute> },
-      { path: '/book', element: <ProtectedRoute userOnly><Book /></ProtectedRoute> },
+      { path: '/book', element: <ProtectedRoute userOnly><BookChoose /></ProtectedRoute> },
+      { path: '/book/court', element: <ProtectedRoute userOnly><Book /></ProtectedRoute> },
       { path: '/my-bookings', element: <ProtectedRoute userOnly><MyBookings /></ProtectedRoute> },
       { path: '/guide', element: <ProtectedRoute userOnly><Guide /></ProtectedRoute> },
       { path: '/admin', element: <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute> },

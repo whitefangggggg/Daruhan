@@ -4,7 +4,7 @@ import { Check, MessageCircle } from './ui/Icon'
 import { STATUS_TONE } from '../utils/bookingStatus'
 import { CONTACT } from '../lib/constants'
 
-const REDIRECT_SECONDS = 5
+const REDIRECT_SECONDS = 10
 
 export { REDIRECT_SECONDS }
 

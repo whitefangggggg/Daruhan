@@ -160,8 +160,8 @@ export default function Home() {
               <div className="absolute -right-2 -top-2 w-24 h-24 rounded-full bg-brand-gold-400/20 blur-xl group-hover:bg-brand-gold-400/30 transition-colors" />
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-gold-300/0 via-brand-gold-400/60 to-brand-gold-300/0 opacity-80" />
               <span className="relative mb-2 block drop-shadow-sm"><AppEmoji name="court" size={30} /></span>
-              <p className="relative font-bold text-white text-sm">Book a court</p>
-              <p className="relative text-brand-gold-200/90 text-xs mt-0.5">Reserve your slot</p>
+              <p className="relative font-bold text-white text-sm">Book</p>
+              <p className="relative text-brand-gold-200/90 text-xs mt-0.5">Court or KTV</p>
             </button>
 
             <button
@@ -220,7 +220,7 @@ export default function Home() {
               <p className="font-semibold text-gray-800 dark:text-gray-100 mb-1">No upcoming bookings</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">Courts are open — grab a slot and we&apos;ll see you on the court.</p>
               <button type="button" onClick={() => navigate('/book')} className="btn-primary text-sm">
-                Book a court
+                Book now
               </button>
             </div>
           ) : (

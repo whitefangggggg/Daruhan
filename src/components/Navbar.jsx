@@ -18,9 +18,7 @@ const PUBLIC_LINKS = [
 
 const AUTH_LINKS = [
   { label: 'Home', to: '/home', icon: Home, iconVariant: 'green' },
-  ...(SITE.features.openPlay ? [{ label: 'Open Play', to: '/open-play', emoji: 'paddle' }] : []),
-  { label: 'Book', to: '/book', emoji: 'court' },
-  { label: 'KTV', to: '/ktv', emoji: 'microphone' },
+  { label: 'Book', to: '/book', emoji: 'court', match: 'book' },
   { label: 'Bookings', to: '/my-bookings', icon: ClipboardList, iconVariant: 'blue' },
   { label: 'Guide', to: '/guide', icon: BookOpen, iconVariant: 'purple' },
 ]
@@ -140,7 +138,12 @@ export default function Navbar() {
     navigate('/')
   }
 
-  function isActive(path) {
+  function isActive(path, match) {
+    if (match === 'book') {
+      return location.pathname === '/book'
+        || location.pathname.startsWith('/book/')
+        || location.pathname === '/ktv'
+    }
     if (path.startsWith('/#')) {
       return location.pathname === '/' && location.hash === path.slice(1)
     }
@@ -223,7 +226,13 @@ export default function Navbar() {
         <div className="hidden md:flex flex-1 items-center justify-center gap-0.5">
           {user ? (
             AUTH_LINKS.map(link => (
-              <NavLink key={link.to} to={link.to} label={link.label} isActive={isActive(link.to)} darkNav={darkNav} />
+              <NavLink
+                key={link.to}
+                to={link.to}
+                label={link.label}
+                isActive={isActive(link.to, link.match)}
+                darkNav={darkNav}
+              />
             ))
           ) : (
             <>
@@ -251,7 +260,7 @@ export default function Navbar() {
                 </button>
               )}
               <Link to="/book" className="btn-primary text-sm py-2 px-4">
-                Book Court
+                Book
               </Link>
               <NotificationBell onNavigate={() => setDropdownOpen(false)} />
               <div className="relative" ref={dropdownRef}>
@@ -323,7 +332,7 @@ export default function Navbar() {
                 Sign In
               </Link>
               <Link to="/book" className="btn-primary text-sm py-2 px-4">
-                Book a Court
+                Book
               </Link>
             </>
           )}
@@ -392,7 +401,7 @@ export default function Navbar() {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMenuOpen(false)}
-                    className={mobileLinkClass(isActive(link.to))}
+                    className={mobileLinkClass(isActive(link.to, link.match))}
                   >
                     {link.emoji ? (
                       <span className="w-7 h-7 rounded-lg bg-brand-gold-50 dark:bg-brand-navy-900/30 flex items-center justify-center flex-shrink-0">
@@ -461,7 +470,7 @@ export default function Navbar() {
                   className="btn-primary text-center text-sm min-h-[2.75rem] inline-flex items-center justify-center"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Book a Court
+                  Book
                 </Link>
                 <Link
                   to="/login"

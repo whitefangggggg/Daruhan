@@ -129,7 +129,7 @@ export default function MyBookings() {
                 onClick={() => navigate('/book')}
                 className="btn-primary text-sm"
               >
-                Book a Court
+                Book now
               </button>
             </div>
           </MotionIn>

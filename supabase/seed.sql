@@ -33,7 +33,12 @@ WHERE name IN ('GCash', 'GoTyme');
 INSERT INTO public.payment_methods (name, account_name, qr_image_url, is_active, sort_order)
 SELECT v.name, v.account_name, v.qr_image_url, true, v.sort_order
 FROM (VALUES
-  ('QR PH', 'Daruhan Skirmish Cebu', '/payment-qr-daruhan.png'::text, 1)
+  (
+    'QR PH',
+    'Daruhan Skirmish Cebu',
+    'https://pvjvpbffrcrdwqxewuxa.supabase.co/storage/v1/object/public/payment-assets/Daruhan_QRPH.jpg'::text,
+    1
+  )
 ) AS v(name, account_name, qr_image_url, sort_order)
 WHERE NOT EXISTS (
   SELECT 1 FROM public.payment_methods pm WHERE pm.name = v.name
@@ -42,7 +47,7 @@ WHERE NOT EXISTS (
 -- Keep the merchant QR + account name current even if the row already existed.
 UPDATE public.payment_methods
 SET account_name = 'Daruhan Skirmish Cebu',
-    qr_image_url = '/payment-qr-daruhan.png'
+    qr_image_url = 'https://pvjvpbffrcrdwqxewuxa.supabase.co/storage/v1/object/public/payment-assets/Daruhan_QRPH.jpg'
 WHERE name = 'QR PH';
 
 -- After first signup, promote your account:
