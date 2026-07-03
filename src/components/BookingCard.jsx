@@ -23,6 +23,10 @@ function ExtrasChip({ children }) {
 export default function BookingCard({ booking, onClick }) {
   const { courts, date, start_hour, duration_hours, total_price, notes, created_at } = booking
 
+  const isKtv = courts?.type === 'ktv'
+  const venueEmoji = isKtv ? 'microphone' : 'court'
+  const venueFallback = isKtv ? 'KTV Room' : 'Court'
+
   const displayStatus = getDisplayStatus(booking)
   const tone = STATUS_TONE[displayStatus.tone]
   const parsed = parseBookingNotes(notes)
@@ -59,10 +63,10 @@ export default function BookingCard({ booking, onClick }) {
 
       <div className="flex items-center gap-2 mb-4">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gold-50 dark:bg-brand-navy-900/30 border border-brand-gold-200 dark:border-slate-600 flex-shrink-0">
-          <AppEmoji name="court" size={20} />
+          <AppEmoji name={venueEmoji} size={20} />
         </span>
         <h3 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
-          {courts?.name ?? 'Court'}
+          {courts?.name ?? venueFallback}
         </h3>
       </div>
 

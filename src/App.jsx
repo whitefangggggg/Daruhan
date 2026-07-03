@@ -1,10 +1,14 @@
-import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { createBrowserRouter, RouterProvider, Navigate, useLocation, useOutlet } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './hooks/useAuth'
 import { useTheme } from './hooks/useTheme'
 import Navbar from './components/Navbar'
 import AdminNavbar from './components/AdminNavbar'
 import Footer from './components/Footer'
+import PageTransition from './components/PageTransition'
+import { fadeIn, transition } from './lib/motion'
 import Landing from './pages/Landing'
 import Home from './pages/Home'
 import OpenPlay from './pages/OpenPlay'
@@ -28,12 +32,18 @@ import AuthCallback from './pages/AuthCallback'
 
 function Spinner() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <motion.div
+      className="flex items-center justify-center min-h-screen"
+      initial="hidden"
+      animate="visible"
+      variants={fadeIn}
+      transition={transition.medium}
+    >
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-brand-gold-200 border-t-brand-gold-500 rounded-full animate-spin" />
         <p className="text-sm text-gray-400 font-medium">Loading…</p>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -61,7 +71,24 @@ function GuestRoute({ children }) {
   return children
 }
 
-import { useEffect } from 'react'
+function AnimatedOutlet() {
+  const location = useLocation()
+  const outlet = useOutlet()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      {outlet ? (
+        <PageTransition key={location.pathname}>
+          {outlet}
+        </PageTransition>
+      ) : null}
+    </AnimatePresence>
+  )
+}
 
 function AppShell() {
   const location = useLocation()
@@ -85,14 +112,14 @@ function AppShell() {
   return (
     <div
       className={`min-h-screen flex flex-col transition-colors duration-300 ${isAdminArea ? 'admin-shell admin-page' : ''}`}
-      style={isAdminArea ? undefined : { 
-        background: activeTheme === 'dark' 
-          ? 'linear-gradient(160deg, #0a1220 0%, #152238 40%, #1c2f4d 100%)' 
-          : 'linear-gradient(160deg, #faf8f3 0%, #ffffff 40%, #f3ead4 100%)' 
+      style={isAdminArea ? undefined : {
+        background: activeTheme === 'dark'
+          ? 'linear-gradient(160deg, #0a1220 0%, #152238 40%, #1c2f4d 100%)'
+          : 'linear-gradient(160deg, #faf8f3 0%, #ffffff 40%, #f3ead4 100%)',
       }}
     >
-      <Toaster 
-        position="top-center" 
+      <Toaster
+        position="top-center"
         toastOptions={{
           style: {
             background: activeTheme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
@@ -102,7 +129,7 @@ function AppShell() {
             boxShadow: activeTheme === 'dark' ? '0 4px 14px rgba(0, 0, 0, 0.3)' : '0 4px 14px rgba(0, 0, 0, 0.08)',
             fontSize: '0.875rem',
             fontWeight: 500,
-            border: activeTheme === 'dark' ? '1px solid rgba(51, 65, 85, 0.8)' : '1px solid rgba(243, 244, 246, 0.8)'
+            border: activeTheme === 'dark' ? '1px solid rgba(51, 65, 85, 0.8)' : '1px solid rgba(243, 244, 246, 0.8)',
           },
           success: {
             iconTheme: {
@@ -120,7 +147,7 @@ function AppShell() {
       />
       {!hideChrome && (isAdminArea ? <AdminNavbar /> : <Navbar />)}
       <main className={`flex-1 w-full min-w-0 ${isAdminArea ? 'overflow-x-clip' : ''}`}>
-        <Outlet />
+        <AnimatedOutlet />
       </main>
       {!hideChrome && !isAdminArea && <Footer />}
     </div>
@@ -132,7 +159,7 @@ const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { path: '/', element: <GuestRoute><Landing /></GuestRoute> },
-      { path: '/ktv', element: <ProtectedRoute userOnly><BookKtv /></ProtectedRoute> },
+      { path: '/ktv', element: <Navigate to="/book/ktv" replace /> },
       { path: '/home', element: <ProtectedRoute userOnly><Home /></ProtectedRoute> },
       { path: '/open-play', element: <ProtectedRoute userOnly><OpenPlay /></ProtectedRoute> },
       { path: '/notifications', element: <ProtectedRoute userOnly><Notifications /></ProtectedRoute> },
@@ -142,6 +169,7 @@ const router = createBrowserRouter([
       { path: '/profile', element: <ProtectedRoute userOnly><Profile /></ProtectedRoute> },
       { path: '/book', element: <ProtectedRoute userOnly><BookChoose /></ProtectedRoute> },
       { path: '/book/court', element: <ProtectedRoute userOnly><Book /></ProtectedRoute> },
+      { path: '/book/ktv', element: <ProtectedRoute userOnly><BookKtv /></ProtectedRoute> },
       { path: '/my-bookings', element: <ProtectedRoute userOnly><MyBookings /></ProtectedRoute> },
       { path: '/guide', element: <ProtectedRoute userOnly><Guide /></ProtectedRoute> },
       { path: '/admin', element: <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute> },

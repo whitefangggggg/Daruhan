@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { AnimatePresence, motion } from 'framer-motion'
+import AppEmoji from './ui/AppEmoji'
 import { MessageCircle, X } from './ui/Icon'
 import BookingPriceBreakdown from './BookingPriceBreakdown'
 import { getDisplayStatus, STATUS_TONE } from '../utils/bookingStatus'
@@ -54,6 +55,9 @@ export default function BookingDetailModal({ booking, onClose, onCancel, cancell
   const displayStatus = getDisplayStatus(booking)
   const tone = STATUS_TONE[displayStatus.tone]
   const canCancel = status === 'confirmed' || status === 'processing'
+  const isKtv = courts?.type === 'ktv'
+  const unitLabel = isKtv ? 'Room' : 'Court'
+  const venueEmoji = isKtv ? 'microphone' : 'court'
 
   return (
     <motion.div
@@ -77,8 +81,9 @@ export default function BookingDetailModal({ booking, onClose, onCancel, cancell
       >
         <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4 border-b border-gray-100 dark:border-slate-700">
           <div>
-            <p className="font-extrabold text-gray-900 dark:text-white text-lg leading-tight">
-              {courts?.name ?? 'Booking'}
+            <p className="font-extrabold text-gray-900 dark:text-white text-lg leading-tight flex items-center gap-2">
+              <AppEmoji name={venueEmoji} size={20} />
+              {courts?.name ?? (isKtv ? 'KTV Room' : 'Booking')}
             </p>
             <p className="text-sm text-gray-400 mt-0.5">
               {format(parseISO(date), 'MMMM d, yyyy')}
@@ -118,6 +123,7 @@ export default function BookingDetailModal({ booking, onClose, onCancel, cancell
             trainerHeads={trainerHeads}
             userNotes={userNotes}
             totalPrice={total_price}
+            unitLabel={unitLabel}
           />
 
           <div className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800/60 p-4 space-y-3">

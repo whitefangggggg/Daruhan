@@ -9,8 +9,8 @@ import { useAuth } from '../hooks/useAuth'
 import { useAvailability } from '../hooks/useAvailability'
 import { calculateKtvTotal, getKtvRateForHour, getKtvThemeForHour, KTV_RATE_BRACKETS } from '../lib/pricing'
 import UserBookingTimeGrid from '../components/UserBookingTimeGrid'
-import TimeGuideModal from '../components/TimeGuideModal'
 import DatePicker from '../components/DatePicker'
+import AppEmoji from '../components/ui/AppEmoji'
 import { AlertTriangle, Check } from '../components/ui/Icon'
 import BookingPriceBreakdown from '../components/BookingPriceBreakdown'
 import BookingSuccessReceipt, { REDIRECT_SECONDS } from '../components/BookingSuccessReceipt'
@@ -33,10 +33,17 @@ import { transition as motionTransition } from '../lib/motion'
 import { getPaymentMethodLogo, resolvePaymentQrImageUrl } from '../lib/paymentMethods'
 
 const KTV_OPERATING_HOURS = SITE.ktv.operatingHours
+const KTV_PATH = '/book/ktv'
 /** Draft is stored separately from the pickleball booking draft. */
 const draftKey = userId => `${userId}:ktv`
 
-const WIZARD_STEPS = ['Details', 'Time slot', 'Review', 'Payment']
+/** KTV-specific steps — intentionally not the court wizard labels. */
+const WIZARD_STEPS = ['Who', 'When', 'Confirm', 'Pay']
+
+const DURATION_CHIPS = Array.from(
+  { length: SITE.ktv.maxHours - SITE.ktv.minHours + 1 },
+  (_, i) => SITE.ktv.minHours + i,
+)
 
 const bookStepVariants = {
   enter: direction => ({
@@ -77,9 +84,13 @@ function formatHour(h) {
 
 function StepLabel({ num, label, done, active }) {
   return (
-    <div className={`flex items-center gap-2 text-xs font-semibold transition-colors whitespace-nowrap ${active ? 'text-brand-gold-600 dark:text-brand-gold-400' : done ? 'text-gray-500 dark:text-gray-400' : 'text-gray-300 dark:text-gray-600'}`}>
+    <div className={`flex items-center gap-2 text-xs font-semibold transition-colors whitespace-nowrap ${active ? 'text-violet-600 dark:text-violet-400' : done ? 'text-gray-500 dark:text-gray-400' : 'text-gray-300 dark:text-gray-600'}`}>
       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-        done ? 'bg-brand-gold-500 text-white' : active ? 'bg-brand-gold-100 dark:bg-brand-navy-900/40 text-brand-gold-600 dark:text-brand-gold-400 border-2 border-brand-gold-400 dark:border-brand-gold-600' : 'bg-gray-100 dark:bg-slate-800 text-gray-400'
+        done
+          ? 'bg-violet-600 text-white'
+          : active
+            ? 'bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border-2 border-violet-500 dark:border-violet-600'
+            : 'bg-gray-100 dark:bg-slate-800 text-gray-400'
       }`}>
         {done ? <Check size={12} strokeWidth={3} /> : num}
       </span>
@@ -126,7 +137,6 @@ export default function BookKtv() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [duration, setDuration] = useState(1)
   const [startHour, setStartHour] = useState(null)
-  const [timeGuideOpen, setTimeGuideOpen] = useState(false)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -209,8 +219,8 @@ export default function BookKtv() {
       !allowNavigationRef.current
       && !resumeOpen
       && hasBookingProgress
-      && currentLocation.pathname === '/ktv'
-      && nextLocation.pathname !== '/ktv',
+      && currentLocation.pathname === KTV_PATH
+      && nextLocation.pathname !== KTV_PATH,
   )
 
   const collectDraftSnapshot = useCallback(() => ({
@@ -635,17 +645,6 @@ export default function BookKtv() {
     }
     if (step >= 3) return
 
-    if (step === 1) {
-      try {
-        if (sessionStorage.getItem('daruhan-timeguide-seen') !== '1') {
-          setTimeGuideOpen(true)
-          sessionStorage.setItem('daruhan-timeguide-seen', '1')
-        }
-      } catch {
-        /* ignore storage errors */
-      }
-    }
-
     if (navBlockClearRef.current) clearTimeout(navBlockClearRef.current)
     setNavBlocked(true)
     navBlockClearRef.current = setTimeout(() => {
@@ -880,14 +879,26 @@ export default function BookKtv() {
 
   return (
     <div className={`mx-auto px-4 py-10 transition-[max-width] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${step === 2 ? 'max-w-4xl' : 'max-w-2xl'}`}>
-      <div className="mb-6">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-          Book a <span className="gradient-text">KTV Room</span>
-        </h1>
-        <p className="text-gray-400 mt-1 text-sm">Step through details, then pay via QR — staff will confirm your room after verifying your payment reference.</p>
+      <div className="ktv-party-surface mb-6 rounded-3xl border border-violet-200/80 dark:border-violet-900/50 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50/50 dark:from-violet-950/50 dark:via-slate-900 dark:to-fuchsia-950/20 px-5 py-5 sm:px-6 sm:py-6 shadow-sm shadow-violet-500/5">
+        <div className="ktv-party-content flex items-start gap-3">
+          <span className="w-12 h-12 rounded-2xl bg-white/90 dark:bg-slate-900/80 border border-violet-200 dark:border-violet-800/50 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <AppEmoji name="microphone" size={28} />
+          </span>
+          <div className="ktv-party-panel min-w-0 rounded-2xl px-3 py-2 -ml-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-700 dark:text-violet-300">
+              Daruhan KTV
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mt-0.5">
+              Grab the mic
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1.5 leading-relaxed">
+              ₱{SITE.ktv.ratePerHour}/hr flat · {SITE.ktv.roomCount} private rooms · we auto-assign · {SITE.ktv.hoursLabel}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Step progress */}
+      {/* Step progress — KTV labels (Who / When / Confirm / Pay) */}
       <div className="flex items-center gap-2 sm:gap-4 mb-8 overflow-x-auto pb-2">
         {WIZARD_STEPS.map((label, i) => (
           <div key={label} className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
@@ -897,7 +908,7 @@ export default function BookKtv() {
               done={step > i + 1}
               active={step === i + 1}
             />
-            {i < WIZARD_STEPS.length - 1 && <div className="w-6 sm:flex-1 h-px bg-gray-100 dark:bg-slate-800 min-w-[8px]" />}
+            {i < WIZARD_STEPS.length - 1 && <div className="w-6 sm:flex-1 h-px bg-violet-100 dark:bg-violet-900/40 min-w-[8px]" />}
           </div>
         ))}
       </div>
@@ -937,16 +948,17 @@ export default function BookKtv() {
               animate="center"
               exit="exit"
               transition={motionTransition.medium}
-              className="card p-5 space-y-4"
+              className="ktv-party-surface card p-5 space-y-4 border-violet-100 dark:border-violet-900/40"
             >
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 1 · Details</p>
+              <div className="ktv-party-content space-y-4">
+              <p className="text-xs font-bold text-violet-700 dark:text-violet-300 uppercase tracking-widest">Who&apos;s booking?</p>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Booking name</label>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Party name</label>
                 <input
                   type="text"
                   value={bookingName}
                   onChange={e => setBookingName(e.target.value)}
-                  placeholder="e.g. Juan Dela Cruz"
+                  placeholder="e.g. Juan's birthday crew"
                   required
                   className="input-field"
                 />
@@ -961,23 +973,25 @@ export default function BookKtv() {
                   required
                   className="input-field"
                 />
-                <p className="text-xs text-gray-400 mt-1">We&apos;ll use this to reach you about your booking.</p>
+                <p className="text-xs text-gray-400 mt-1">We&apos;ll text or call if we need you at the lounge.</p>
               </div>
-              <div className="rounded-2xl border-2 border-gray-900 dark:border-gray-100 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm">
-                <p className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white leading-tight">
-                  🎤 We&apos;ll assign your room
+              <div className="rounded-2xl border border-violet-200 dark:border-violet-800/50 bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
+                <p className="text-base sm:text-lg font-extrabold text-violet-950 dark:text-violet-100 leading-tight flex items-center gap-2">
+                  <AppEmoji name="microphone" size={22} />
+                  Room is auto-assigned
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 leading-relaxed">
-                  Daruhan has {SITE.ktv.roomCount} KTV rooms. We automatically pick whichever room is free for
-                  your chosen time — flat rate of ₱{SITE.ktv.ratePerHour}/hour, no need to choose a specific room.
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1.5 leading-relaxed">
+                  No room picker — we give you any free room from our {SITE.ktv.roomCount}.
+                  Flat ₱{SITE.ktv.ratePerHour}/hour, any time we&apos;re open.
                 </p>
               </div>
               <DatePicker
-                label="Date"
+                label="Night / day"
                 value={selectedDate}
                 min={format(new Date(), 'yyyy-MM-dd')}
                 onChange={val => { setSelectedDate(val); setStartHour(null) }}
               />
+              </div>
             </motion.div>
             )}
 
@@ -990,60 +1004,54 @@ export default function BookKtv() {
               animate="center"
               exit="exit"
               transition={motionTransition.medium}
-              className="card p-5 sm:p-6 space-y-5"
+              className="ktv-party-surface card p-5 sm:p-6 space-y-5 border-violet-100 dark:border-violet-900/40"
             >
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 2 · Duration & time</p>
-                <button
-                  type="button"
-                  onClick={() => setTimeGuideOpen(true)}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-gold-600 dark:text-brand-gold-400 px-2.5 py-1.5 rounded-full border border-brand-gold-200 dark:border-brand-gold-800/60 hover:bg-brand-gold-50 dark:hover:bg-brand-navy-900/20 transition-colors shrink-0"
-                >
-                  <span className="text-[12px] leading-none">?</span>
-                  How time slots work
-                </button>
+              <div className="ktv-party-content space-y-5">
+              <div className="ktv-party-panel rounded-xl px-3 py-2">
+                <p className="text-xs font-bold text-violet-700 dark:text-violet-300 uppercase tracking-widest">When are you singing?</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Pick how long, then tap a start time. Closed {SITE.ktv.hoursDetail.replace(/^Daily · /i, '')}.
+                </p>
               </div>
 
-              <div className="rounded-xl border-2 border-brand-gold-300 dark:border-brand-gold-800/40 bg-brand-gold-50 dark:bg-brand-navy-900/20 px-4 py-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-brand-gold-950 dark:text-brand-gold-100">Flat rate · any hour</span>
-                <span className="text-lg font-extrabold text-brand-gold-700 dark:text-brand-gold-400 tabular-nums">₱{SITE.ktv.ratePerHour}/hr</span>
+              <div className="rounded-xl border-2 border-violet-300 dark:border-violet-800/50 bg-white/85 dark:bg-slate-900/75 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+                <span className="text-sm font-semibold text-violet-950 dark:text-violet-100">Flat rate · any open hour</span>
+                <span className="text-lg font-extrabold text-violet-700 dark:text-violet-300 tabular-nums">₱{SITE.ktv.ratePerHour}/hr</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-[minmax(11rem,13rem)_minmax(0,1fr)] gap-5 md:gap-6 items-start">
-                <div className="rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-800 p-4 md:sticky md:top-24">
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    How many hours?
-                  </label>
-                  <div className="flex flex-row items-center justify-center gap-3 mt-4">
-                    <button
-                      type="button"
-                      onClick={() => setDuration(d => Math.max(1, d - 1))}
-                      className="w-10 h-10 rounded-xl border-2 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 font-bold text-xl hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-colors flex items-center justify-center"
-                    >
-                      −
-                    </button>
-                    <div className="text-center min-w-[4.5rem]">
-                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white tabular-nums">{duration}</span>
-                      <span className="text-sm font-semibold text-gray-400 ml-1">hr{duration > 1 ? 's' : ''}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setDuration(d => Math.min(maxDuration, d + 1))}
-                      className="w-10 h-10 rounded-xl border-2 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 font-bold text-xl hover:border-brand-gold-400 dark:hover:border-brand-gold-500 hover:text-brand-gold-600 dark:hover:text-brand-gold-400 transition-colors flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-gray-400 text-center mt-4 leading-snug">
-                    {startHour != null
-                      ? `Max ${maxDuration}h from ${formatHour(startHour)} · ${SITE.ktv.hoursDetail}`
-                      : `Up to ${maxDuration}h today · ${SITE.ktv.hoursDetail}`}
-                  </p>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  Session length
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {DURATION_CHIPS.filter(h => h <= maxDuration).map(h => {
+                    const active = duration === h
+                    return (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setDuration(h)}
+                        className={`min-w-[3rem] px-3 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                          active
+                            ? 'border-violet-600 bg-violet-600 text-white shadow-sm'
+                            : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:border-violet-400'
+                        }`}
+                      >
+                        {h}h
+                      </button>
+                    )
+                  })}
                 </div>
+                <p className="text-[11px] text-gray-400 mt-2">
+                  {startHour != null
+                    ? `Up to ${maxDuration}h from ${formatHour(startHour)} · ₱${(SITE.ktv.ratePerHour * duration).toLocaleString()} for this session`
+                    : `Up to ${maxDuration}h available today`}
+                </p>
+              </div>
 
-                <div className="min-w-0 rounded-xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-5">
+              <div className="min-w-0 rounded-xl border border-violet-100 dark:border-violet-900/40 bg-white dark:bg-slate-800 p-4 sm:p-5">
                   {startHour !== null && (
-                    <p className="text-xs font-semibold text-brand-gold-500 dark:text-brand-gold-400 mb-3">
+                    <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 mb-3">
                       {formatHour(startHour)} – {formatHour(bookingEndHour)} ({duration}h)
                     </p>
                   )}
@@ -1054,7 +1062,7 @@ export default function BookKtv() {
                   )}
                   {roomsLoading ? (
                     <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-                      <div className="w-4 h-4 border-2 border-gray-200 dark:border-slate-700 border-t-brand-gold-500 rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-violet-200 dark:border-violet-900 border-t-violet-600 rounded-full animate-spin" />
                       Loading rooms…
                     </div>
                   ) : rooms.length === 0 ? (
@@ -1077,7 +1085,7 @@ export default function BookKtv() {
                     </div>
                   ) : availLoading ? (
                     <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-                      <div className="w-4 h-4 border-2 border-gray-200 dark:border-slate-700 border-t-brand-gold-500 rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-violet-200 dark:border-violet-900 border-t-violet-600 rounded-full animate-spin" />
                       Loading availability…
                     </div>
                   ) : (
@@ -1096,7 +1104,7 @@ export default function BookKtv() {
                       unitLabel="room"
                     />
                   )}
-                </div>
+              </div>
               </div>
             </motion.div>
             )}
@@ -1112,23 +1120,25 @@ export default function BookKtv() {
               transition={motionTransition.medium}
               className="space-y-4"
             >
-              <div className="card p-5 space-y-4">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 3 · Notes</p>
+              <div className="ktv-party-surface card p-5 space-y-4 border-violet-100 dark:border-violet-900/40">
+                <div className="ktv-party-content space-y-4">
+                <p className="text-xs font-bold text-violet-700 dark:text-violet-300 uppercase tracking-widest">Anything we should know?</p>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Notes <span className="normal-case text-gray-400 font-normal">(optional)</span></label>
                   <textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     rows={3}
-                    placeholder="Any special requests… e.g. number of guests"
+                    placeholder="e.g. 8 pax, birthday playlist, late arrival…"
                     className="input-field resize-none"
                   />
+                </div>
                 </div>
               </div>
 
               <BookingPriceBreakdown
-                title="Confirm your booking"
-                subtitle="Check the details and total, then continue to scan the payment QR."
+                title="Confirm your session"
+                subtitle="Check the room total, then continue to scan the QR and pay."
                 bookingName={bookingName.trim()}
                 contactPhone={contactPhone.trim()}
                 courtName={roomLabel}
@@ -1158,7 +1168,7 @@ export default function BookKtv() {
 
               {needsHoldRecovery ? (
                 <div className="card p-5 space-y-4">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 4 · Payment</p>
+                  <p className="text-xs font-bold text-violet-600/80 dark:text-violet-400 uppercase tracking-widest">Pay</p>
                   <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-2">
                     <p className="font-semibold text-amber-950 dark:text-amber-200">No active room hold</p>
                     <p className="text-sm text-amber-900 dark:text-amber-400 leading-relaxed">
@@ -1180,7 +1190,7 @@ export default function BookKtv() {
               {/* ── Phase 1: choose payment method ── */}
               {paymentRefPhase === 'select-method' && !singlePaymentMethod && (
                 <div className="card p-5 space-y-4">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 4 · Payment method</p>
+                  <p className="text-xs font-bold text-violet-600/80 dark:text-violet-400 uppercase tracking-widest">Payment method</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     Choose how you&apos;d like to pay{' '}
                     <span className="font-extrabold text-brand-gold-600">₱{totalPrice.toLocaleString()}</span>.
@@ -1241,7 +1251,7 @@ export default function BookKtv() {
               {/* ── Phase 2: scan QR ── */}
               {paymentRefPhase === 'qr' && selectedMethod && (
                 <div className="card p-5 space-y-4">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 4 · Scan &amp; pay</p>
+                  <p className="text-xs font-bold text-violet-600/80 dark:text-violet-400 uppercase tracking-widest">Scan &amp; pay</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     Scan the <strong>QR PH</strong> code below and pay the exact amount:
                   </p>
@@ -1536,12 +1546,10 @@ export default function BookKtv() {
         </div>
       </form>
 
-      <TimeGuideModal open={timeGuideOpen} onClose={() => setTimeGuideOpen(false)} />
-
       <BookingConfirmModal
         open={leaveOpen}
-        title="Leave this booking?"
-        description="Your progress will be saved. You can pick up where you left off when you come back to Book a KTV room."
+        title="Leave this KTV booking?"
+        description="Your progress will be saved. Come back to Book → KTV anytime to continue."
         cancelLabel="Stay on this page"
         confirmLabel="Leave for now"
         onCancel={cancelLeave}
@@ -1550,8 +1558,8 @@ export default function BookKtv() {
 
       <BookingConfirmModal
         open={resumeOpen}
-        title="Pick up where you left off?"
-        description="You have a KTV booking in progress from earlier. Continue from your last step, or start a new booking from scratch."
+        title="Resume your KTV session?"
+        description="You have a KTV booking in progress. Continue from your last step, or start a new session."
         cancelLabel="Start over"
         confirmLabel="Continue booking"
         confirmTone="primary"

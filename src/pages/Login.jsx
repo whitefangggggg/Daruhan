@@ -205,10 +205,11 @@ export default function Login() {
 
   const passwordMismatch = mode === 'register' && confirmPassword.length > 0 && password !== confirmPassword
 
-  const loginSubtitle = redirectTo === '/ktv'
+  const isKtvRedirect = redirectTo === '/ktv' || redirectTo === '/book/ktv'
+  const loginSubtitle = isKtvRedirect
     ? 'Sign in to book a KTV room'
     : 'Sign in to book your court'
-  const registerSubtitle = redirectTo === '/ktv'
+  const registerSubtitle = isKtvRedirect
     ? 'Create an account to book a KTV room'
     : 'Create an account and start playing'
 

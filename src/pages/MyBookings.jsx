@@ -25,21 +25,116 @@ function bySessionDateAsc(a, b) {
   return (a.start_hour ?? 0) - (b.start_hour ?? 0)
 }
 
+function isKtvBooking(booking) {
+  return booking.courts?.type === 'ktv'
+}
+
+function splitByVenue(list) {
+  return {
+    court: list.filter(b => !isKtvBooking(b)),
+    ktv: list.filter(isKtvBooking),
+  }
+}
+
+function VenueSectionLabel({ emoji, label }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gold-50 dark:bg-brand-navy-900/30 border border-brand-gold-200/70 dark:border-brand-navy-700/50">
+        <AppEmoji name={emoji} size={16} />
+      </span>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+        {label}
+      </p>
+    </div>
+  )
+}
+
+function VenueBookingList({ bookings, onSelect, itemVariants = scaleIn, showLabels = true }) {
+  const { court, ktv } = splitByVenue(bookings)
+  const showBoth = showLabels && court.length > 0 && ktv.length > 0
+
+  function renderCards(items) {
+    return (
+      <MotionStagger className="space-y-4" staggerChildren={0.05} delayChildren={0.02} animateOnMount>
+        {items.map(b => (
+          <MotionItem key={b.id} variants={itemVariants}>
+            <BookingCard booking={b} onClick={() => onSelect(b)} />
+          </MotionItem>
+        ))}
+      </MotionStagger>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      {court.length > 0 && (
+        <div>
+          {showLabels && <VenueSectionLabel emoji="court" label="Pickleball" />}
+          {renderCards(court)}
+        </div>
+      )}
+
+      {showBoth && (
+        <div
+          className="flex items-center gap-3 py-1"
+          role="separator"
+          aria-label="KTV bookings"
+        >
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-200 dark:via-brand-navy-700 to-transparent" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">
+            KTV
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-brand-gold-200 dark:via-brand-navy-700 to-transparent" />
+        </div>
+      )}
+
+      {ktv.length > 0 && (
+        <div>
+          {showLabels && <VenueSectionLabel emoji="microphone" label="KTV" />}
+          {renderCards(ktv)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const VENUE_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'court', label: 'Pickleball', emoji: 'court' },
+  { id: 'ktv', label: 'KTV', emoji: 'microphone' },
+]
+
 export default function MyBookings() {
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const { bookings, loading, error, cancelBooking } = useBookings(user?.id)
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [cancellingId, setCancellingId] = useState(null)
+  const [venueFilter, setVenueFilter] = useState('all')
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
   }, [user, authLoading, navigate])
 
+  const venueCounts = useMemo(() => {
+    const active = bookings.filter(b => b.status !== 'cancelled')
+    return {
+      all: active.length,
+      court: active.filter(b => !isKtvBooking(b)).length,
+      ktv: active.filter(isKtvBooking).length,
+    }
+  }, [bookings])
+
+  const filteredBookings = useMemo(() => {
+    if (venueFilter === 'ktv') return bookings.filter(isKtvBooking)
+    if (venueFilter === 'court') return bookings.filter(b => !isKtvBooking(b))
+    return bookings
+  }, [bookings, venueFilter])
+
   const { processing, upcoming, past, stats } = useMemo(() => {
-    const processingList = bookings.filter(b => b.status === 'processing').sort(byBookedAtDesc)
-    const upcomingList = bookings.filter(isUpcomingConfirmed).sort(bySessionDateAsc)
-    const pastList = bookings
+    const processingList = filteredBookings.filter(b => b.status === 'processing').sort(byBookedAtDesc)
+    const upcomingList = filteredBookings.filter(isUpcomingConfirmed).sort(bySessionDateAsc)
+    const pastList = filteredBookings
       .filter(b => b.status !== 'processing' && (b.status !== 'confirmed' || isSessionEnded(b)))
       .sort(byBookedAtDesc)
 
@@ -49,10 +144,13 @@ export default function MyBookings() {
       past: pastList,
       stats: {
         total: bookings.filter(b => b.status !== 'cancelled').length,
-        upcoming: upcomingList.length,
+        upcoming: bookings.filter(isUpcomingConfirmed).length,
       },
     }
-  }, [bookings])
+  }, [filteredBookings, bookings])
+
+  const hasFilteredResults = processing.length > 0 || upcoming.length > 0 || past.length > 0
+  const showVenueLabels = venueFilter === 'all'
 
   async function handleCancel(id) {
     setCancellingId(id)
@@ -98,7 +196,7 @@ export default function MyBookings() {
           </p>
         </MotionIn>
 
-        <MotionIn className="mb-8" animateOnMount delay={40}>
+        <MotionIn className="mb-6" animateOnMount delay={40}>
           <div className="grid grid-cols-2 gap-3">
             <BookingStatPill
               icon={<ClipboardList size={18} className="text-blue-600 dark:text-blue-400" />}
@@ -114,6 +212,41 @@ export default function MyBookings() {
             />
           </div>
         </MotionIn>
+
+        {bookings.length > 0 && (
+          <MotionIn className="mb-8" animateOnMount delay={60}>
+            <div
+              className="flex gap-1.5 p-1 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-brand-gold-200/70 dark:border-slate-700"
+              role="tablist"
+              aria-label="Filter by venue"
+            >
+              {VENUE_FILTERS.map(filter => {
+                const active = venueFilter === filter.id
+                const count = venueCounts[filter.id] ?? 0
+                return (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setVenueFilter(filter.id)}
+                    className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      active
+                        ? 'bg-brand-gold-500 text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-brand-gold-50/80 dark:hover:bg-slate-700/60'
+                    }`}
+                  >
+                    {filter.emoji && <AppEmoji name={filter.emoji} size={16} />}
+                    <span>{filter.label}</span>
+                    <span className={`tabular-nums text-xs font-bold ${active ? 'text-white/80' : 'text-gray-400'}`}>
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </MotionIn>
+        )}
 
         {error && <StatusMessage type="error" className="mb-6">{error}</StatusMessage>}
 
@@ -133,6 +266,36 @@ export default function MyBookings() {
               </button>
             </div>
           </MotionIn>
+        ) : !hasFilteredResults ? (
+          <MotionIn animateOnMount delay={80}>
+            <div className="card p-10 text-center">
+              <div className="mb-4 flex justify-center">
+                <AppEmoji name={venueFilter === 'ktv' ? 'microphone' : 'court'} size={48} />
+              </div>
+              <p className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">
+                No {venueFilter === 'ktv' ? 'KTV' : 'pickleball'} bookings
+              </p>
+              <p className="text-sm text-gray-400 mb-6">
+                Switch filters or book a new {venueFilter === 'ktv' ? 'room' : 'court'}.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVenueFilter('all')}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                >
+                  Show all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate(venueFilter === 'ktv' ? '/book/ktv' : '/book/court')}
+                  className="btn-primary text-sm"
+                >
+                  Book {venueFilter === 'ktv' ? 'KTV' : 'a court'}
+                </button>
+              </div>
+            </div>
+          </MotionIn>
         ) : (
           <div className="space-y-10">
             {processing.length > 0 && (
@@ -143,48 +306,36 @@ export default function MyBookings() {
                     You&apos;ve submitted payment details. Staff will verify your reference and move these to <strong className="text-gray-700 dark:text-gray-200">confirmed</strong> once payment matches.
                   </p>
                 </div>
-                <MotionStagger className="space-y-4" staggerChildren={0.05} delayChildren={0.02} animateOnMount>
-                  {processing.map(b => (
-                    <MotionItem key={b.id} variants={scaleIn}>
-                      <BookingCard
-                        booking={b}
-                        onClick={() => setSelectedBooking(b)}
-                      />
-                    </MotionItem>
-                  ))}
-                </MotionStagger>
+                <VenueBookingList
+                  bookings={processing}
+                  onSelect={setSelectedBooking}
+                  showLabels={showVenueLabels}
+                />
               </MotionIn>
             )}
 
             {upcoming.length > 0 && (
               <MotionIn animateOnMount delay={processing.length > 0 ? 80 : 40}>
                 <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">Upcoming</h2>
-                <MotionStagger className="space-y-4" staggerChildren={0.05} delayChildren={0.02} animateOnMount>
-                  {upcoming.map(b => (
-                    <MotionItem key={b.id} variants={scaleIn}>
-                      <BookingCard
-                        booking={b}
-                        onClick={() => setSelectedBooking(b)}
-                      />
-                    </MotionItem>
-                  ))}
-                </MotionStagger>
+                <VenueBookingList
+                  bookings={upcoming}
+                  onSelect={setSelectedBooking}
+                  showLabels={showVenueLabels}
+                />
               </MotionIn>
             )}
 
             {past.length > 0 && (
               <MotionIn animateOnMount delay={100}>
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Past</h2>
-                <MotionStagger className="space-y-4 opacity-75" staggerChildren={0.04} delayChildren={0.02} animateOnMount>
-                  {past.map(b => (
-                    <MotionItem key={b.id} variants={fadeUp}>
-                      <BookingCard
-                        booking={b}
-                        onClick={() => setSelectedBooking(b)}
-                      />
-                    </MotionItem>
-                  ))}
-                </MotionStagger>
+                <div className="opacity-75">
+                  <VenueBookingList
+                    bookings={past}
+                    onSelect={setSelectedBooking}
+                    itemVariants={fadeUp}
+                    showLabels={showVenueLabels}
+                  />
+                </div>
               </MotionIn>
             )}
           </div>

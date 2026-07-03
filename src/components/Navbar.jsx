@@ -143,6 +143,7 @@ export default function Navbar() {
       return location.pathname === '/book'
         || location.pathname.startsWith('/book/')
         || location.pathname === '/ktv'
+        || location.pathname === '/book/ktv'
     }
     if (path.startsWith('/#')) {
       return location.pathname === '/' && location.hash === path.slice(1)

@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { fadeUp, transition, viewport as defaultViewport } from '../lib/motion'
+import { motion, useReducedMotion } from 'framer-motion'
+import { fadeUp, fadeIn, transition, viewport as defaultViewport } from '../lib/motion'
 
 export function MotionIn({
   children,
@@ -15,8 +15,10 @@ export function MotionIn({
   style,
   ...rest
 }) {
+  const reduceMotion = useReducedMotion()
   const Component = as || motion.div
   const t = userTransition ?? { ...transition.medium, delay: delay / 1000 }
+  const resolvedVariants = reduceMotion ? fadeIn : variants
 
   const viewProps = animateOnMount
     ? { initial: 'hidden', animate: 'visible' }
@@ -29,8 +31,8 @@ export function MotionIn({
   return (
     <Component
       className={className}
-      variants={variants}
-      transition={t}
+      variants={resolvedVariants}
+      transition={reduceMotion ? transition.fast : t}
       style={style}
       {...viewProps}
       {...rest}

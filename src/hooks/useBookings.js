@@ -15,7 +15,7 @@ export function useBookings(userId) {
     setLoading(true)
     const { data, error } = await supabase
       .from('bookings')
-      .select('*, courts(name), payment_methods(name, account_name)')
+      .select('*, courts(name, type), payment_methods(name, account_name)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 

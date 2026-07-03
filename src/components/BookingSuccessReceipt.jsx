@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import BookingPriceBreakdown from './BookingPriceBreakdown'
 import { Check, MessageCircle } from './ui/Icon'
 import { STATUS_TONE } from '../utils/bookingStatus'
 import { CONTACT } from '../lib/constants'
+import { fadeUp, stagger, transition } from '../lib/motion'
 
 const REDIRECT_SECONDS = 10
 
@@ -36,8 +38,13 @@ export default function BookingSuccessReceipt({
   const progress = ((REDIRECT_SECONDS - secondsLeft) / REDIRECT_SECONDS) * 100
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
+    <motion.div
+      className="space-y-6"
+      initial="hidden"
+      animate="visible"
+      variants={stagger(0.07, 0.04)}
+    >
+      <motion.div className="text-center" variants={fadeUp} transition={transition.page}>
         <div
           className="w-20 h-20 rounded-full bg-brand-gold-500 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-brand-gold-400/30"
           style={{ animation: 'book-success-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}
@@ -50,9 +57,9 @@ export default function BookingSuccessReceipt({
         <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
           We&apos;ve got your payment details. For the fastest confirmation, message us on Facebook below.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="card p-5 space-y-4">
+      <motion.div className="card p-5 space-y-4" variants={fadeUp} transition={transition.page}>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Your receipt</p>
           <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${tone.badge}`}>
@@ -99,9 +106,13 @@ export default function BookingSuccessReceipt({
             <span className="font-mono font-semibold text-gray-900 dark:text-white text-right break-all">{paymentReference}</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="rounded-2xl border-2 border-[#1877F2]/30 bg-gradient-to-br from-[#1877F2]/10 via-white to-[#1877F2]/5 px-5 py-6 sm:px-6 sm:py-7 shadow-sm shadow-[#1877F2]/10 space-y-4">
+      <motion.div
+        className="rounded-2xl border-2 border-[#1877F2]/30 bg-gradient-to-br from-[#1877F2]/10 via-white to-[#1877F2]/5 px-5 py-6 sm:px-6 sm:py-7 shadow-sm shadow-[#1877F2]/10 space-y-4"
+        variants={fadeUp}
+        transition={transition.page}
+      >
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="w-11 h-11 rounded-2xl bg-[#1877F2] text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-[#1877F2]/25">
             <MessageCircle size={22} strokeWidth={2.25} />
@@ -133,9 +144,13 @@ export default function BookingSuccessReceipt({
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 leading-relaxed">
           Tip: say something like &ldquo;Hi, I just booked — ref {paymentReference}&rdquo;
         </p>
-      </div>
+      </motion.div>
 
-      <div className="rounded-2xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-brand-gold-50/60 dark:bg-brand-navy-900/20 px-4 py-4 text-center space-y-3">
+      <motion.div
+        className="rounded-2xl border border-brand-gold-200 dark:border-brand-navy-700/40 bg-brand-gold-50/60 dark:bg-brand-navy-900/20 px-4 py-4 text-center space-y-3"
+        variants={fadeUp}
+        transition={transition.page}
+      >
         <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
           Track confirmation and updates anytime in{' '}
           <Link to="/my-bookings" className="font-semibold text-brand-gold-600 dark:text-brand-gold-400 hover:text-brand-gold-600 dark:hover:text-brand-gold-300 underline underline-offset-2">
@@ -165,7 +180,7 @@ export default function BookingSuccessReceipt({
         >
           Go to My Bookings now
         </button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

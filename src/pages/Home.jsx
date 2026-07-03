@@ -50,7 +50,7 @@ export default function Home() {
     Promise.all([
       supabase
         .from('bookings')
-        .select('*, courts(name)')
+        .select('*, courts(name, type)')
         .eq('user_id', user.id)
         .eq('status', 'confirmed')
         .gte('date', today)
@@ -242,7 +242,10 @@ export default function Home() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{b.courts?.name}</p>
+                      <span className="inline-flex items-center gap-1.5 min-w-0">
+                        <AppEmoji name={b.courts?.type === 'ktv' ? 'microphone' : 'court'} size={16} />
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{b.courts?.name}</p>
+                      </span>
                       <span className="text-[11px] font-bold uppercase tracking-wide text-brand-gold-600 dark:text-brand-gold-400 bg-brand-gold-50 dark:bg-brand-navy-900/40 border border-brand-gold-200 dark:border-brand-navy-700 px-2 py-0.5 rounded-full">
                         {dateLabel(b.date)}
                       </span>
