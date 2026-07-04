@@ -24,19 +24,18 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.courts c WHERE c.name = v.name
 );
 
--- Single payment rail: QR PH (InstaPay / PESONet — low fees), shared by
--- court and KTV bookings alike.
+-- Payment: GCash only (QR image in Supabase Storage payment-assets bucket).
 UPDATE public.payment_methods
 SET is_active = false
-WHERE name IN ('GCash', 'GoTyme');
+WHERE name IN ('QR PH', 'GoTyme');
 
 INSERT INTO public.payment_methods (name, account_name, qr_image_url, is_active, sort_order)
 SELECT v.name, v.account_name, v.qr_image_url, true, v.sort_order
 FROM (VALUES
   (
-    'QR PH',
-    'Daruhan Skirmish Cebu',
-    'https://pvjvpbffrcrdwqxewuxa.supabase.co/storage/v1/object/public/payment-assets/Daruhan_QRPH.jpg'::text,
+    'GCash',
+    'Ellen A.',
+    'https://pvjvpbffrcrdwqxewuxa.supabase.co/storage/v1/object/public/payment-assets/Daruhan_Gcash.jpg'::text,
     1
   )
 ) AS v(name, account_name, qr_image_url, sort_order)
@@ -44,10 +43,16 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.payment_methods pm WHERE pm.name = v.name
 );
 
--- Keep the merchant QR + account name current even if the row already existed.
 UPDATE public.payment_methods
-SET account_name = 'Daruhan Skirmish Cebu',
-    qr_image_url = 'https://pvjvpbffrcrdwqxewuxa.supabase.co/storage/v1/object/public/payment-assets/Daruhan_QRPH.jpg'
+SET
+  account_name = 'Ellen A.',
+  qr_image_url = 'https://pvjvpbffrcrdwqxewuxa.supabase.co/storage/v1/object/public/payment-assets/Daruhan_Gcash.jpg',
+  is_active = true,
+  sort_order = 1
+WHERE name = 'GCash';
+
+UPDATE public.payment_methods
+SET is_active = false
 WHERE name = 'QR PH';
 
 -- After first signup, promote your account:

@@ -52,7 +52,7 @@ export const USER_GUIDE_CATEGORIES = [
           'Pick duration (1–24 hours, limited by time left that day).',
           'Add optional extras — paddle or ball rental (₱50/hr each) — on the next step.',
           'Review the price breakdown and continue to payment.',
-          'Scan the QR PH code, pay the exact amount, then enter sender name, reference, and app used if needed.',
+          'Scan the GCash QR, pay the exact amount, then enter sender name and reference. Tick the box if you paid from another app or bank.',
           'Submit — your booking stays Processing until staff verifies payment.',
         ],
         tips: [

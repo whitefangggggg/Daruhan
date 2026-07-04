@@ -60,7 +60,7 @@ const bookStepVariants = {
   }),
 }
 
-/** Banks / e-wallets users may pay from when scanning a QR PH code */
+/** Banks / e-wallets users may pay from when not using GCash directly */
 const SENDER_PLATFORMS = [
   'GCash',
   'Maya',
@@ -1253,7 +1253,7 @@ export default function BookKtv() {
                 <div className="card p-5 space-y-4">
                   <p className="text-xs font-bold text-violet-600/80 dark:text-violet-400 uppercase tracking-widest">Scan &amp; pay</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Scan the <strong>QR PH</strong> code below and pay the exact amount:
+                    Scan the <strong>{selectedMethod.name}</strong> QR below and pay the exact amount:
                   </p>
 
                   <div
@@ -1282,11 +1282,11 @@ export default function BookKtv() {
                   </div>
 
                   <p className="text-xs text-amber-900 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2">
-                    After sending exactly <strong>₱{totalPrice.toLocaleString()}</strong>, tap <strong>Done paying</strong> and enter your reference number so staff can verify and confirm your booking.
+                    After sending exactly <strong>₱{totalPrice.toLocaleString()}</strong> via <strong>GCash</strong>, tap <strong>Done paying</strong> and enter your reference number so staff can verify and confirm your booking.
                   </p>
 
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    QR PH accepts transfers from any participating bank or e-wallet — low fees via InstaPay or PESONet.
+                    Prefer to pay from Maya, a bank, or another app? Tick the box below so staff know where to look for your transfer.
                   </p>
 
                   <label className="flex items-start gap-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 cursor-pointer hover:border-brand-gold-200 dark:hover:border-brand-gold-500 transition-colors">
@@ -1303,7 +1303,7 @@ export default function BookKtv() {
                       className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-gold-500 focus:ring-brand-gold-500"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-200 leading-snug">
-                      I paid using a <strong>different app or bank</strong> than the one shown on my receipt
+                      I paid using a <strong>different app or bank</strong> (not GCash)
                     </span>
                   </label>
                 </div>
