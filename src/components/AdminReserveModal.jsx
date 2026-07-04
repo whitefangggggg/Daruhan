@@ -166,6 +166,28 @@ export default function AdminReserveModal({
     setPaymentCollected(null)
   }
 
+  // Availability (must be declared before effects that read blockedHours)
+  const courtIdsForAvail = selectedCourtIds.length ? selectedCourtIds : allCourtIds
+  const {
+    perCourtOccupied,
+    pastHours,
+    blockedHours,
+    loading: availabilityLoading,
+  } = useAvailability(courtIdsForAvail, open ? selectedDate : null, operatingHours)
+
+  const availabilityReady = courtIdsForAvail.length > 0
+    && perCourtOccupied.length === courtIdsForAvail.length
+
+  const unavailableHours = useMemo(() => {
+    if (!availabilityReady) return new Set()
+    return getHoursFullyOccupied(perCourtOccupied)
+  }, [perCourtOccupied, availabilityReady])
+
+  const canStartAt = useCallback((hour, dur) => {
+    if (!availabilityReady) return false
+    return canStartOnAllCourts(hour, dur, perCourtOccupied, blockedHours, operatingHours)
+  }, [perCourtOccupied, blockedHours, availabilityReady, operatingHours])
+
   // Clamp duration when a late start time limits how long the block can run
   useEffect(() => {
     if (startHour == null) return
@@ -194,28 +216,6 @@ export default function AdminReserveModal({
       document.body.style.overflow = prev
     }
   }, [open, onClose, submitting, successPromptOpen])
-
-  // Availability
-  const courtIdsForAvail = selectedCourtIds.length ? selectedCourtIds : allCourtIds
-  const {
-    perCourtOccupied,
-    pastHours,
-    blockedHours,
-    loading: availabilityLoading,
-  } = useAvailability(courtIdsForAvail, open ? selectedDate : null, operatingHours)
-
-  const availabilityReady = courtIdsForAvail.length > 0
-    && perCourtOccupied.length === courtIdsForAvail.length
-
-  const unavailableHours = useMemo(() => {
-    if (!availabilityReady) return new Set()
-    return getHoursFullyOccupied(perCourtOccupied)
-  }, [perCourtOccupied, availabilityReady])
-
-  const canStartAt = useCallback((hour, dur) => {
-    if (!availabilityReady) return false
-    return canStartOnAllCourts(hour, dur, perCourtOccupied, blockedHours, operatingHours)
-  }, [perCourtOccupied, blockedHours, availabilityReady, operatingHours])
 
   // Derived
   const pricePerCourt = startHour != null ? priceForRange(startHour, durationHours) : 0
