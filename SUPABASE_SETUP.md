@@ -93,9 +93,9 @@ Never put the `service_role` key in the frontend.
 | `courts` | 4 courts (seeded) |
 | `payment_methods` | QR PH (seeded) |
 | `bookings` | Court holds, payments, admin reserves |
-| `blocked_slots` | Maintenance blocks + open-play blocks |
+| `blocked_slots` | Maintenance blocks |
 | `notifications` | User alerts (written by DB triggers) |
-| `open_play_posts` / `open_play_rsvps` | Optional (`SITE.features.openPlay`) |
+| `open_play_*` | Legacy tables (unused in app) |
 
 | RPC | Who can call |
 |-----|----------------|
@@ -111,7 +111,7 @@ Never put the `service_role` key in the frontend.
 - **Users** read/update only their own `profiles` (cannot change `role`)  
 - **Users** read own `bookings`; update payment fields on `processing` holds; cancel own bookings  
 - **Users** cannot `INSERT` bookings directly — only via `create_booking_hold_auto`  
-- **Admins** read/update all bookings; full access to `blocked_slots` and open play  
+- **Admins** read/update all bookings; full access to `blocked_slots`  
 - **Courts / payment_methods** — read-only for authenticated users  
 - **Notifications** — users read/mark-read own rows only; inserts via triggers  
 

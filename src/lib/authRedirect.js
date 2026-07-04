@@ -2,7 +2,7 @@ import { SITE } from '../config/site'
 
 const STORAGE_KEY = `${SITE.storagePrefix}:auth-redirect`
 
-const ALLOWED_PREFIXES = ['/book', '/ktv', '/home', '/open-play', '/my-bookings', '/profile', '/guide', '/notifications']
+const ALLOWED_PREFIXES = ['/book', '/ktv', '/home', '/my-bookings', '/profile', '/guide', '/notifications']
 
 function isSafeRedirect(path) {
   if (!path || typeof path !== 'string') return false

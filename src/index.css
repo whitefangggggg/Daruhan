@@ -463,58 +463,6 @@
     animation: float 9s ease-in-out 1s infinite;
   }
 
-  /* ── Landing open play promo ─────────────────────────────────────────────── */
-  @keyframes open-play-glow {
-    0%, 100% {
-      box-shadow:
-        0 0 0 0 rgba(232, 213, 163, 0.45),
-        0 10px 36px rgba(15, 26, 46, 0.28);
-    }
-    50% {
-      box-shadow:
-        0 0 0 5px rgba(232, 213, 163, 0.28),
-        0 16px 48px rgba(201, 162, 39, 0.35);
-    }
-  }
-
-  @keyframes open-play-shimmer {
-    0% { transform: translateX(-120%) skewX(-14deg); }
-    100% { transform: translateX(220%) skewX(-14deg); }
-  }
-
-  .open-play-promo {
-    animation: open-play-glow 2.8s ease-in-out infinite;
-    transition: transform 0.2s ease;
-  }
-
-  .open-play-promo:hover {
-    transform: scale(1.02) translateY(-2px);
-  }
-
-  .open-play-promo__shimmer {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
-  .open-play-promo__shimmer::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: 0;
-    width: 45%;
-    height: 200%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.35) 50%,
-      transparent 100%
-    );
-    animation: open-play-shimmer 4.5s ease-in-out infinite;
-  }
-
   /* ── Hero atmosphere: mesh, particles, court blueprint ─────────────────── */
   @keyframes hero-mesh-shift {
     0% { transform: translate(0, 0) scale(1) rotate(0deg); }

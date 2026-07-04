@@ -25,7 +25,7 @@ Edit **`src/config/site.js`** — the main switch for a new venue:
 | `venue.courtCount` / `maxCourtQuantity` | How many courts they have |
 | `venue.hoursLabel` / `cityLine` | e.g. `Open 24/7`, `Cebu City` |
 | `contact.*` | Email, Facebook, address, Waze, Maps links |
-| `features.*` | Toggle open play, trainer, multi-court booking |
+| `features.*` | Toggle trainer and multi-court booking |
 | `copy.*` | Hero, footer, about blurb strings |
 
 Also update manually:
@@ -79,7 +79,6 @@ Point these at the **Daruhan** Supabase project. Never put `service_role` in the
 - [ ] Hold created → submit payment reference
 - [ ] Admin: verify payment → booking confirmed
 - [ ] Cancel booking (user + admin)
-- [ ] Open play post (if enabled)
 
 ---
 

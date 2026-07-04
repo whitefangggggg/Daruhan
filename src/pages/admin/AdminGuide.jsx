@@ -6,7 +6,7 @@ export default function AdminGuide() {
     <GuideLayout
       variant="admin"
       title="Admin manual"
-      subtitle="Day-to-day tasks for staff — confirming payments, booking courts, open play, and blocking hours."
+      subtitle="Day-to-day tasks for staff — confirming payments, managing pickleball and KTV bookings, and blocking hours."
       categories={ADMIN_GUIDE_CATEGORIES}
       backLink="/admin"
       backLabel="Back to overview"

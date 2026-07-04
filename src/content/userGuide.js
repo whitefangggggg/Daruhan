@@ -24,8 +24,8 @@ export const USER_GUIDE_CATEGORIES = [
         summary: 'What you see after sign-in and where to go next.',
         steps: [
           'Home shows your booking stats, quick actions, and upcoming reservations.',
-          'My Open Play lists sessions you marked as RSVPed.',
-          'Use the navbar for Book, Open Play, Bookings, and Guide.',
+          'Use the navbar for Home, Book, Bookings, and Guide.',
+          'Book opens a chooser for pickleball courts or KTV rooms.',
           'The bell icon shows recent notifications.',
         ],
         tips: [
@@ -88,40 +88,6 @@ export const USER_GUIDE_CATEGORIES = [
         ],
         tips: [
           'Processing bookings may auto-cancel after 30 minutes if payment was not submitted.',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'open-play',
-    title: 'Open Play',
-    summary: 'Community drop-in sessions — separate from paid court bookings.',
-    topics: [
-      {
-        id: 'user-browse-open-play',
-        title: 'Browse open play sessions',
-        path: '/open-play',
-        summary: `Find upcoming community sessions posted by ${SITE.name}.`,
-        steps: [
-          'Tap Open Play in the navbar.',
-          'Browse Upcoming sessions with date, time, court, and skill level.',
-          'Each card shows a countdown to the RSVP deadline.',
-          'Switch to Past to see sessions whose RSVP window has closed.',
-        ],
-      },
-      {
-        id: 'user-rsvp-open-play',
-        title: 'RSVP & track on your home feed',
-        path: '/open-play',
-        summary: 'Sign up on Reclub and keep sessions on your Home page.',
-        steps: [
-          'On a session card, tap RSVP on Reclub — this opens their site to sign up.',
-          'After RSVPing externally, return and tap Yes, I\'ve RSVPed — add to My Open Play.',
-          'The session then appears under My Open Play on Home and in the My RSVPs filter.',
-          'Tap Remove on a card anytime to drop it from your list.',
-        ],
-        tips: [
-          `Open play fees (if any) are handled through Reclub, not ${SITE.name}.`,
         ],
       },
     ],

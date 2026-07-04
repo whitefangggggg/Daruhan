@@ -11,7 +11,6 @@ import PageTransition from './components/PageTransition'
 import { fadeIn, transition } from './lib/motion'
 import Landing from './pages/Landing'
 import Home from './pages/Home'
-import OpenPlay from './pages/OpenPlay'
 import Notifications from './pages/Notifications'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
@@ -24,7 +23,6 @@ import ManageBookings from './pages/admin/ManageBookings'
 import ManageKtv from './pages/admin/ManageKtv'
 import ManageSlots from './pages/admin/ManageSlots'
 import ManageUsers from './pages/admin/ManageUsers'
-import ManageOpenPlay from './pages/admin/ManageOpenPlay'
 import AdminGuide from './pages/admin/AdminGuide'
 import Guide from './pages/Guide'
 import BookKtv from './pages/BookKtv'
@@ -161,7 +159,6 @@ const router = createBrowserRouter([
       { path: '/', element: <GuestRoute><Landing /></GuestRoute> },
       { path: '/ktv', element: <Navigate to="/book/ktv" replace /> },
       { path: '/home', element: <ProtectedRoute userOnly><Home /></ProtectedRoute> },
-      { path: '/open-play', element: <ProtectedRoute userOnly><OpenPlay /></ProtectedRoute> },
       { path: '/notifications', element: <ProtectedRoute userOnly><Notifications /></ProtectedRoute> },
       { path: '/login', element: <GuestRoute><Login /></GuestRoute> },
       { path: '/auth/callback', element: <AuthCallback /> },
@@ -177,7 +174,6 @@ const router = createBrowserRouter([
       { path: '/admin/ktv', element: <ProtectedRoute adminOnly><ManageKtv /></ProtectedRoute> },
       { path: '/admin/slots', element: <ProtectedRoute adminOnly><ManageSlots /></ProtectedRoute> },
       { path: '/admin/users', element: <ProtectedRoute adminOnly><ManageUsers /></ProtectedRoute> },
-      { path: '/admin/open-play', element: <ProtectedRoute adminOnly><ManageOpenPlay /></ProtectedRoute> },
       { path: '/admin/guide', element: <ProtectedRoute adminOnly><AdminGuide /></ProtectedRoute> },
     ],
   },

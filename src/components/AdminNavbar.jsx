@@ -9,14 +9,13 @@ import Avatar from './Avatar'
 import BrandLogo from './BrandLogo'
 import { SITE } from '../config/site'
 import { IconBadge, LogOut, ClipboardList, Menu, X, ChevronDown } from './ui/Icon'
-import { Ban, BookOpen, LayoutDashboard, Mic, Users, UsersRound, Moon, Sun } from 'lucide-react'
+import { Ban, BookOpen, LayoutDashboard, Mic, Users, Moon, Sun } from 'lucide-react'
 import { transition } from '../lib/motion'
 
 const ADMIN_LINKS = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard, exact: true },
-  { label: 'Bookings', to: '/admin/bookings', icon: ClipboardList },
+  { label: 'Pickleball', to: '/admin/bookings', icon: ClipboardList },
   { label: 'KTV', to: '/admin/ktv', icon: Mic },
-  { label: 'Open Play', to: '/admin/open-play', icon: UsersRound },
   { label: 'Block Hours', to: '/admin/slots', icon: Ban },
   { label: 'Users', to: '/admin/users', icon: Users },
   { label: 'Guide', to: '/admin/guide', icon: BookOpen },

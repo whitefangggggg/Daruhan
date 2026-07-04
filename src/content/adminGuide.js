@@ -10,8 +10,8 @@ export const ADMIN_GUIDE_CATEGORIES = [
         summary: 'What each menu item does and when to use it.',
         steps: [
           'Overview — monthly booking stats, pending payments, and today\'s confirmed schedule.',
-          'Bookings — full calendar, payment verification, and walk-in reservations.',
-          'Open Play — community sessions, RSVP posts, and session wrap-up.',
+          'Pickleball — court calendar, payment verification, and walk-in reservations.',
+          'KTV — KTV room bookings, separate from pickleball.',
           'Block Hours — take a court offline for maintenance or private use.',
           'Users — registered players and contact details.',
           'Guide — this manual, always available from the top menu.',
@@ -29,7 +29,7 @@ export const ADMIN_GUIDE_CATEGORIES = [
           'Trend arrows compare this month to the previous one.',
         ],
         tips: [
-          'Open play revenue is on the Open Play page — it is not mixed into booking revenue here.',
+          'All-time and monthly revenue include both pickleball and KTV bookings.',
         ],
       },
       {
@@ -45,7 +45,7 @@ export const ADMIN_GUIDE_CATEGORIES = [
           'Confirmed bookings leave the pending list and the player gets a notification.',
         ],
         tips: [
-          'You can also verify payments from the Bookings page if you are already viewing that day.',
+          'You can also verify payments from the Pickleball page if you are already viewing that day.',
         ],
       },
       {
@@ -63,7 +63,7 @@ export const ADMIN_GUIDE_CATEGORIES = [
   },
   {
     id: 'bookings',
-    title: 'Bookings',
+    title: 'Pickleball',
     summary: 'View the calendar, verify payments, create walk-ins, and manage reservations.',
     topics: [
       {
@@ -72,7 +72,7 @@ export const ADMIN_GUIDE_CATEGORIES = [
         path: '/admin/bookings',
         summary: 'Browse reservations by date and see status at a glance.',
         steps: [
-          'Open Bookings from the admin menu.',
+          'Open Pickleball from the admin menu.',
           'Pick a date or use the calendar to jump to any day.',
           'Each card shows court, time, player, status, and payment info.',
           'Statuses include Processing (awaiting verification), Confirmed, Completed, and Cancelled.',
@@ -99,7 +99,7 @@ export const ADMIN_GUIDE_CATEGORIES = [
         path: '/admin/bookings',
         summary: 'Book a court for someone at the desk or over the phone.',
         steps: [
-          'On the Bookings page, tap Create reservation.',
+          'On the Pickleball page, tap Create reservation.',
           'Choose court, date, start hour, and duration (1–24 hours).',
           'Enter the player\'s name and contact details.',
           'Turn on Repeat weekly if the same slot should repeat every matching weekday until an end date.',
@@ -128,62 +128,9 @@ export const ADMIN_GUIDE_CATEGORIES = [
         path: '/admin/bookings',
         summary: 'Remove a confirmed reservation when the session will not happen.',
         steps: [
-          'Open the booking on the Bookings page.',
+          'Open the booking on the Pickleball page.',
           'Tap Cancel on a confirmed booking.',
           'Confirm — the slot becomes available again for other players.',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'open-play',
-    title: 'Open Play',
-    summary: 'Post community sessions, manage RSVPs, and log attendance and revenue.',
-    topics: [
-      {
-        id: 'admin-create-open-play',
-        title: 'Create an open play post',
-        path: '/admin/open-play',
-        summary: 'Announce a drop-in session and block the court automatically.',
-        steps: [
-          'Open Open Play from the admin menu and tap Create post.',
-          'Pick court, session date, start time, and end time.',
-          'Set the RSVP deadline — when sign-ups close on Reclub.',
-          'Add the Reclub link, skill level, title, and session details.',
-          'Publish — the court is blocked for that window and players can see the post.',
-        ],
-        tips: [
-          'The RSVP deadline can be earlier than session start — that drives the countdown players see.',
-        ],
-      },
-      {
-        id: 'admin-edit-open-play',
-        title: 'Edit or cancel a session',
-        path: '/admin/open-play',
-        summary: 'Update details or call off an upcoming open play.',
-        steps: [
-          'Find the session under Upcoming on the Open Play page.',
-          'Tap Edit to change times, details, or the Reclub link.',
-          'Tap Cancel post if the session will not run — this frees the court again.',
-        ],
-        tips: [
-          'Always cancel from the app rather than leaving a stale post live.',
-        ],
-      },
-      {
-        id: 'admin-wrap-up-open-play',
-        title: 'Mark complete & log revenue',
-        path: '/admin/open-play',
-        summary: 'Close out a session after RSVP deadline and record how it went.',
-        steps: [
-          'After the RSVP deadline, the session moves to Needs wrap-up.',
-          'Tap Mark complete on the session card.',
-          'Enter attendance (headcount) and money collected (₱).',
-          'Save — the session moves to Completed and counts toward open play stats.',
-          'Use Edit totals later if you need to correct the numbers.',
-        ],
-        tips: [
-          'Open play income is tracked separately from regular court bookings.',
         ],
       },
     ],
@@ -206,7 +153,7 @@ export const ADMIN_GUIDE_CATEGORIES = [
           'Remove the block from the list when the court is open again.',
         ],
         tips: [
-          'Open play posts block the court automatically — no extra block needed for those.',
+          'Blocked hours only apply to pickleball courts — use them for maintenance or private events.',
         ],
       },
     ],

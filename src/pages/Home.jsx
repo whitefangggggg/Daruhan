@@ -12,8 +12,7 @@ import AnimateIn from '../components/AnimateIn'
 import { isUpcomingConfirmed, sumCompletedHours } from '../utils/bookingLifecycle'
 import { getBookingEndHour } from '../utils/bookingHours'
 import BookingStatPill from '../components/BookingStatPill'
-import OpenPlayPostCard from '../components/openPlay/OpenPlayPostCard'
-import { getOpenPlayDisplayStatus, sortOpenPlayPosts } from '../utils/openPlay'
+import { ClipboardList } from 'lucide-react'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -39,7 +38,6 @@ function dateLabel(dateStr) {
 export default function Home() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
-  const [myOpenPlay, setMyOpenPlay] = useState([])
   const [upcoming, setUpcoming] = useState([])
   const [stats, setStats] = useState({ completed: 0, hoursPlayed: 0 })
   const [loading, setLoading] = useState(true)
@@ -60,21 +58,10 @@ export default function Home() {
         .from('bookings')
         .select('status, duration_hours, date, start_hour')
         .eq('user_id', user.id),
-      supabase
-        .from('open_play_rsvps')
-        .select('post_id, open_play_posts(*, courts(name))')
-        .eq('user_id', user.id),
-    ]).then(([upRes, statRes, rsvpRes]) => {
+    ]).then(([upRes, statRes]) => {
       const all = statRes.data || []
       const upcomingConfirmed = (upRes.data || []).filter(isUpcomingConfirmed)
       setUpcoming(upcomingConfirmed)
-      const rsvpedPosts = rsvpRes.error
-        ? []
-        : (rsvpRes.data ?? [])
-            .map(r => r.open_play_posts)
-            .filter(Boolean)
-            .filter(p => getOpenPlayDisplayStatus(p) === 'upcoming')
-      setMyOpenPlay(sortOpenPlayPosts(rsvpedPosts))
       setStats({
         completed: all.filter(b => b.status === 'completed').length,
         hoursPlayed: sumCompletedHours(all),
@@ -166,37 +153,21 @@ export default function Home() {
 
             <button
               type="button"
-              onClick={() => navigate('/open-play')}
+              onClick={() => navigate('/my-bookings')}
               className="relative overflow-hidden rounded-2xl p-5 text-left border border-brand-gold-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800 backdrop-blur-sm shadow-md transition-shadow duration-150 hover:shadow-lg group"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-brand-gold-50/80 via-transparent to-brand-cream/50 dark:from-brand-navy-900/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
-              <span className="relative mb-2 block"><AppEmoji name="paddle" size={26} /></span>
-              <p className="relative font-bold text-gray-900 dark:text-white text-sm">Open play</p>
-              <p className="relative text-gray-500 dark:text-gray-400 text-xs mt-0.5">Community sessions</p>
+              <span className="relative mb-2 block text-brand-gold-600 dark:text-brand-gold-400">
+                <ClipboardList size={26} strokeWidth={2} />
+              </span>
+              <p className="relative font-bold text-gray-900 dark:text-white text-sm">My Bookings</p>
+              <p className="relative text-gray-500 dark:text-gray-400 text-xs mt-0.5">Track reservations</p>
             </button>
           </div>
         </div>
       </AnimateIn>
 
-      {myOpenPlay.length > 0 && (
-        <AnimateIn delay={170}>
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-brand-gold-600/80 uppercase tracking-widest">My Open Play</p>
-              <Link to="/open-play" className="text-xs font-semibold text-brand-gold-500 hover:text-brand-gold-600 hover:underline">
-                Browse all →
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {myOpenPlay.map(post => (
-                <OpenPlayPostCard key={post.id} post={post} variant="user" hasRsvped compactRsvp />
-              ))}
-            </div>
-          </div>
-        </AnimateIn>
-      )}
-
-      <AnimateIn delay={myOpenPlay.length > 0 ? 200 : 170}>
+      <AnimateIn delay={170}>
         <div>
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold text-brand-gold-600/80 uppercase tracking-widest">Upcoming</p>

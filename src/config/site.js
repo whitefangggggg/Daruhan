@@ -48,7 +48,6 @@ export const SITE = {
   },
 
   features: {
-    openPlay: false,
     trainer: false,
     multiCourtBooking: true,
   },
@@ -72,7 +71,6 @@ export const SITE = {
     aboutHighlightNote: 'Proper Valladolid, Carcar City, Cebu',
     eventsBlurb:
       "Court busy? We've got you covered. Rack 'em up, book a KTV room, or cool down with a drink at Daruhan Super Club.",
-    openPlayIntro: 'Drop-in sessions posted by Daruhan. RSVP, then tap',
     joinCta: 'Join Daruhan',
     welcomeOnboarding: 'Welcome to Daruhan',
   },

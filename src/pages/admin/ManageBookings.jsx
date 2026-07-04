@@ -49,8 +49,8 @@ export default function ManageBookings({ venueType = 'court' }) {
   const isKtv = venueType === 'ktv'
   const unitLabel = isKtv ? 'room' : 'court'
   const unitEmoji = isKtv ? 'microphone' : 'court'
-  const pageTitle = isKtv ? 'KTV Bookings' : 'Bookings'
-  const kicker = isKtv ? 'Admin · KTV' : 'Admin · Bookings'
+  const pageTitle = isKtv ? 'KTV Bookings' : 'Pickleball Bookings'
+  const kicker = isKtv ? 'Admin · KTV' : 'Admin · Pickleball'
 
   const [viewMonth, setViewMonth] = useState(new Date())
   const [bookings, setBookings] = useState([])
