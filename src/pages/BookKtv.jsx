@@ -60,7 +60,7 @@ const bookStepVariants = {
   }),
 }
 
-/** Banks / e-wallets users may pay from when scanning a QR PH code */
+/** Banks / e-wallets users may pay from when not using GCash directly */
 const SENDER_PLATFORMS = [
   'GCash',
   'Maya',
@@ -150,6 +150,7 @@ export default function BookKtv() {
   const [paymentRefPhase, setPaymentRefPhase] = useState('select-method')
   const [paymentReference, setPaymentReference] = useState('')
   const [paymentSenderName, setPaymentSenderName] = useState('')
+  const [sendingFromDifferentPlatform, setSendingFromDifferentPlatform] = useState(false)
   const [paymentSenderPlatform, setPaymentSenderPlatform] = useState('')
   const [paymentSenderPlatformOther, setPaymentSenderPlatformOther] = useState('')
   const [paymentMethods, setPaymentMethods] = useState([])
@@ -235,13 +236,14 @@ export default function BookKtv() {
     paymentRefPhase,
     paymentReference,
     paymentSenderName,
+    sendingFromDifferentPlatform,
     paymentSenderPlatform,
     paymentSenderPlatformOther,
     selectedPaymentMethodId,
   }), [
     step, bookingName, contactPhone, selectedDate, duration, startHour,
     notes, pendingBookingIds, assignedHolds, paymentRefPhase, paymentReference,
-    paymentSenderName, paymentSenderPlatform,
+    paymentSenderName, sendingFromDifferentPlatform, paymentSenderPlatform,
     paymentSenderPlatformOther, selectedPaymentMethodId,
   ])
 
@@ -268,6 +270,7 @@ export default function BookKtv() {
     setPaymentRefPhase('select-method')
     setPaymentReference('')
     setPaymentSenderName('')
+    setSendingFromDifferentPlatform(false)
     setPaymentSenderPlatform('')
     setPaymentSenderPlatformOther('')
     setSelectedPaymentMethodId(null)
@@ -287,6 +290,7 @@ export default function BookKtv() {
     setPaymentRefPhase(draft.paymentRefPhase ?? 'select-method')
     setPaymentReference(draft.paymentReference ?? '')
     setPaymentSenderName(draft.paymentSenderName ?? '')
+    setSendingFromDifferentPlatform(Boolean(draft.sendingFromDifferentPlatform))
     setPaymentSenderPlatform(draft.paymentSenderPlatform ?? '')
     setPaymentSenderPlatformOther(draft.paymentSenderPlatformOther ?? '')
     setSelectedPaymentMethodId(draft.selectedPaymentMethodId ?? null)
@@ -609,7 +613,9 @@ export default function BookKtv() {
   const resolvedSenderPlatform = paymentSenderPlatform === 'Other'
     ? paymentSenderPlatformOther.trim()
     : paymentSenderPlatform
-  const senderAccountLabel = resolvedSenderPlatform || 'sending app or bank'
+  const senderAccountLabel = sendingFromDifferentPlatform
+    ? (resolvedSenderPlatform || 'sending app or bank')
+    : (selectedMethod?.name ?? 'GCash')
 
   const step1Valid = Boolean(bookingName.trim() && contactPhone.trim() && selectedDate)
   const step2Valid = startHour != null
@@ -655,6 +661,7 @@ export default function BookKtv() {
     setPaymentRefPhase('select-method')
     setPaymentReference('')
     setPaymentSenderName('')
+    setSendingFromDifferentPlatform(false)
     setPaymentSenderPlatform('')
     setPaymentSenderPlatformOther('')
     setSelectedPaymentMethodId(null)
@@ -683,6 +690,7 @@ export default function BookKtv() {
       setPaymentRefPhase('select-method')
       setPaymentReference('')
       setPaymentSenderName('')
+      setSendingFromDifferentPlatform(false)
       setPaymentSenderPlatform('')
       setPaymentSenderPlatformOther('')
       setSelectedPaymentMethodId(null)
@@ -781,6 +789,7 @@ export default function BookKtv() {
     setPaymentRefPhase('select-method')
     setPaymentReference('')
     setPaymentSenderName('')
+    setSendingFromDifferentPlatform(false)
     setPaymentSenderPlatform('')
     setPaymentSenderPlatformOther('')
     setSelectedPaymentMethodId(null)
@@ -802,7 +811,7 @@ export default function BookKtv() {
       setError(`Enter the name on your ${senderAccountLabel} account.`)
       return
     }
-    if (!resolvedSenderPlatform) {
+    if (sendingFromDifferentPlatform && !resolvedSenderPlatform) {
       setError('Select which app or bank you sent the payment from.')
       return
     }
@@ -819,7 +828,7 @@ export default function BookKtv() {
         payment_reference: ref,
         payment_sender_name: sender,
         payment_method_id: selectedPaymentMethodId,
-        payment_sender_platform: resolvedSenderPlatform,
+        payment_sender_platform: sendingFromDifferentPlatform ? resolvedSenderPlatform : null,
       })
       .in('id', pendingBookingIds)
       .eq('user_id', user.id)
@@ -840,7 +849,7 @@ export default function BookKtv() {
         paymentMethodName: selectedMethod?.name ?? null,
         paymentReference: ref,
         paymentSenderName: sender,
-        paymentSenderPlatform: resolvedSenderPlatform,
+        paymentSenderPlatform: sendingFromDifferentPlatform ? resolvedSenderPlatform : null,
       })
       setPendingBookingIds([])
       setAssignedHolds([])
@@ -1244,7 +1253,7 @@ export default function BookKtv() {
                 <div className="card p-5 space-y-4">
                   <p className="text-xs font-bold text-violet-600/80 dark:text-violet-400 uppercase tracking-widest">Scan &amp; pay</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Scan the <strong>QR PH</strong> code below and pay the exact amount:
+                    Scan the <strong>{selectedMethod.name}</strong> QR below and pay the exact amount:
                   </p>
 
                   <div
@@ -1273,54 +1282,86 @@ export default function BookKtv() {
                   </div>
 
                   <p className="text-xs text-amber-900 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2">
-                    After sending exactly <strong>₱{totalPrice.toLocaleString()}</strong>, tap <strong>Done paying</strong> and enter which app or bank you used, your account name, and reference number.
+                    After sending exactly <strong>₱{totalPrice.toLocaleString()}</strong> via <strong>GCash</strong>, tap <strong>Done paying</strong> and enter your reference number so staff can verify and confirm your booking.
                   </p>
 
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    QR PH works with any participating bank or e-wallet — no fees via InstaPay or PESONet.
+                    Prefer to pay from Maya, a bank, or another app? Tick the box below so staff know where to look for your transfer.
                   </p>
+
+                  <label className="flex items-start gap-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 cursor-pointer hover:border-brand-gold-200 dark:hover:border-brand-gold-500 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={sendingFromDifferentPlatform}
+                      onChange={e => {
+                        setSendingFromDifferentPlatform(e.target.checked)
+                        if (!e.target.checked) {
+                          setPaymentSenderPlatform('')
+                          setPaymentSenderPlatformOther('')
+                        }
+                      }}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-gold-500 focus:ring-brand-gold-500"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-200 leading-snug">
+                      I paid using a <strong>different app or bank</strong> (not GCash)
+                    </span>
+                  </label>
                 </div>
               )}
 
-              {/* ── Phase 3: bank/app, sender name, reference (always required) ── */}
+              {/* ── Phase 3: sender name + reference (platform only if not GCash) ── */}
               {paymentRefPhase === 'reference' && (
                 <div className="card p-5 space-y-4">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Payment details</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    You paid via the <strong>QR PH</strong> code. Tell us which app or bank you sent from so staff can verify your{' '}
-                    <span className="font-semibold text-gray-800 dark:text-gray-100">₱{totalPrice.toLocaleString()}</span> payment.
+                    {sendingFromDifferentPlatform ? (
+                      <>
+                        You scanned the <strong>{selectedMethod?.name ?? 'GCash'}</strong> QR but sent from another app or bank.
+                        Tell us which one so staff can verify your{' '}
+                        <span className="font-semibold text-gray-800 dark:text-gray-100">₱{totalPrice.toLocaleString()}</span> payment.
+                      </>
+                    ) : (
+                      <>
+                        Enter the info from your{' '}
+                        {selectedMethod ? <strong>{selectedMethod.name}</strong> : <strong>GCash</strong>}{' '}
+                        receipt so staff can verify your{' '}
+                        <span className="font-semibold text-gray-800 dark:text-gray-100">₱{totalPrice.toLocaleString()}</span> payment.
+                      </>
+                    )}
                   </p>
 
-                  <div>
-                    <label htmlFor="payment-sender-platform" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                      Which app or bank did you send from?
-                      <span className="ml-1 text-red-600 font-extrabold normal-case">*</span>
-                      <span className="ml-1 text-red-600 font-semibold normal-case">(required)</span>
-                    </label>
-                    <select
-                      id="payment-sender-platform"
-                      value={paymentSenderPlatform}
-                      onChange={e => {
-                        setPaymentSenderPlatform(e.target.value)
-                        if (e.target.value !== 'Other') setPaymentSenderPlatformOther('')
-                      }}
-                      className="input-field"
-                    >
-                      <option value="">Select one…</option>
-                      {SENDER_PLATFORMS.map(platform => (
-                        <option key={platform} value={platform}>{platform}</option>
-                      ))}
-                    </select>
-                    {paymentSenderPlatform === 'Other' && (
-                      <input
-                        type="text"
-                        value={paymentSenderPlatformOther}
-                        onChange={e => setPaymentSenderPlatformOther(e.target.value)}
-                        placeholder="e.g. RCBC, Seabank"
-                        className="input-field mt-2"
-                      />
-                    )}
-                  </div>
+                  {sendingFromDifferentPlatform && (
+                    <div>
+                      <label htmlFor="payment-sender-platform" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+                        Which app or bank did you send from?
+                        <span className="ml-1 text-red-600 font-extrabold normal-case">*</span>
+                        <span className="ml-1 text-red-600 font-semibold normal-case">(required)</span>
+                      </label>
+                      <select
+                        id="payment-sender-platform"
+                        value={paymentSenderPlatform}
+                        onChange={e => {
+                          setPaymentSenderPlatform(e.target.value)
+                          if (e.target.value !== 'Other') setPaymentSenderPlatformOther('')
+                        }}
+                        className="input-field"
+                      >
+                        <option value="">Select one…</option>
+                        {SENDER_PLATFORMS.map(platform => (
+                          <option key={platform} value={platform}>{platform}</option>
+                        ))}
+                      </select>
+                      {paymentSenderPlatform === 'Other' && (
+                        <input
+                          type="text"
+                          value={paymentSenderPlatformOther}
+                          onChange={e => setPaymentSenderPlatformOther(e.target.value)}
+                          placeholder="e.g. RCBC, Seabank"
+                          className="input-field mt-2"
+                        />
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label htmlFor="payment-sender" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
@@ -1445,6 +1486,7 @@ export default function BookKtv() {
                 onClick={() => {
                   setError(null)
                   setPaymentRefPhase('select-method')
+                  setSendingFromDifferentPlatform(false)
                   setPaymentSenderPlatform('')
                   setPaymentSenderPlatformOther('')
                 }}
@@ -1478,7 +1520,7 @@ export default function BookKtv() {
                   || !confirmReady
                   || !paymentReference.trim()
                   || !paymentSenderName.trim()
-                  || !resolvedSenderPlatform
+                  || (sendingFromDifferentPlatform && !resolvedSenderPlatform)
                 }
                 className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3.5 rounded-xl font-semibold text-center disabled:opacity-60"
               >
