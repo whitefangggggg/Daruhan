@@ -12,6 +12,7 @@ import MotionIn, { MotionStagger, MotionItem } from '../components/MotionIn'
 import { fadeUp, transition } from '../lib/motion'
 import { RATE_BRACKETS } from '../lib/pricing'
 import HeroAtmosphere from '../components/hero/HeroAtmosphere'
+import VenueGallery from '../components/VenueGallery'
 
 // ── Pricing modal ─────────────────────────────────────────────────────────────
 const LANDING_RATE_STYLES = {
@@ -491,6 +492,11 @@ export default function Landing() {
               </div>
             </MotionItem>
           </MotionStagger>
+
+          {/* ── Photo gallery ───────────────────────────────────────── */}
+          <MotionIn delay={80} amount={0.05} once={false}>
+            <VenueGallery />
+          </MotionIn>
         </div>
         </section>
       </div>
