@@ -1164,12 +1164,21 @@
     }
   }
 
+  /* Mobile: no clip-path — use a simple top arch instead to avoid clipping content */
   .about-experience {
     position: relative;
     overflow: hidden;
     background: #0a1220;
-    -webkit-clip-path: url(#experience-lens-clip);
-    clip-path: url(#experience-lens-clip);
+    border-radius: 1.75rem 1.75rem 0 0;
+  }
+
+  /* md+: restore the original oval lens shape */
+  @media (min-width: 768px) {
+    .about-experience {
+      border-radius: 0;
+      -webkit-clip-path: url(#experience-lens-clip);
+      clip-path: url(#experience-lens-clip);
+    }
   }
 
   .about-experience::before {

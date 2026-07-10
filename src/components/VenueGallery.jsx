@@ -8,7 +8,7 @@
  *   Row 4:  RestoTables (1-2) │ EventParty (3, rowspan 2)
  *   Row 5:  Minimart (1-2)
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Icon as Iconify } from '@iconify/react'
 import { MotionStagger, MotionItem } from './MotionIn'
@@ -40,9 +40,16 @@ const GALLERY = [
 
 /* ── Lightbox ─────────────────────────────────────────────────────────────── */
 function MenuLightbox({ onClose }) {
+  // Lock body scroll while the lightbox is open; restore on close
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6"
       style={{ background: 'rgba(7,13,22,0.93)', backdropFilter: 'blur(8px)' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
